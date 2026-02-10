@@ -1,0 +1,21 @@
+package io.github.springpropertiesmd.api.annotation;
+
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Target({ElementType.FIELD, ElementType.METHOD, ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface PropertyDeprecation {
+
+    String reason() default "";
+
+    String replacedBy() default "";
+
+    String since() default "";
+
+    String removalVersion() default "";
+}
