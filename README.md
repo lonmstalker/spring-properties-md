@@ -1,5 +1,7 @@
 # Spring Properties MD
 
+[![](https://jitpack.io/v/lonmstalker/spring-properties-md.svg)](https://jitpack.io/#lonmstalker/spring-properties-md)
+
 Generate Markdown documentation from Spring Boot `@ConfigurationProperties` with enriched metadata.
 
 ## What it does
@@ -20,17 +22,35 @@ spring-properties-md (root)
 
 ## Quick Start (Maven)
 
-### 1. Add dependencies
+### 1. Add JitPack repository
+
+```xml
+<repositories>
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </repository>
+</repositories>
+
+<pluginRepositories>
+    <pluginRepository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </pluginRepository>
+</pluginRepositories>
+```
+
+### 2. Add dependency
 
 ```xml
 <dependency>
-    <groupId>io.github.springpropertiesmd</groupId>
+    <groupId>com.github.lonmstalker.spring-properties-md</groupId>
     <artifactId>spring-properties-md-api</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
 </dependency>
 ```
 
-### 2. Configure annotation processor
+### 3. Configure annotation processor
 
 ```xml
 <plugin>
@@ -39,22 +59,22 @@ spring-properties-md (root)
     <configuration>
         <annotationProcessorPaths>
             <path>
-                <groupId>io.github.springpropertiesmd</groupId>
+                <groupId>com.github.lonmstalker.spring-properties-md</groupId>
                 <artifactId>spring-properties-md-processor</artifactId>
-                <version>0.1.0-SNAPSHOT</version>
+                <version>0.1.0</version>
             </path>
         </annotationProcessorPaths>
     </configuration>
 </plugin>
 ```
 
-### 3. Add the Maven plugin
+### 4. Add the Maven plugin
 
 ```xml
 <plugin>
-    <groupId>io.github.springpropertiesmd</groupId>
+    <groupId>com.github.lonmstalker.spring-properties-md</groupId>
     <artifactId>spring-properties-md-maven-plugin</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
     <executions>
         <execution>
             <goals>
@@ -65,7 +85,7 @@ spring-properties-md (root)
 </plugin>
 ```
 
-### 4. Annotate your properties
+### 5. Annotate your properties
 
 ```java
 @ConfigurationProperties(prefix = "app.server")
@@ -88,7 +108,7 @@ public class ServerProperties {
 }
 ```
 
-### 5. Build
+### 6. Build
 
 ```bash
 mvn clean compile
