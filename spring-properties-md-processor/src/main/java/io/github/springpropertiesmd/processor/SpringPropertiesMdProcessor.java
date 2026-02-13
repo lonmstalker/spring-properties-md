@@ -8,7 +8,6 @@ import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
@@ -19,11 +18,15 @@ import java.util.List;
 import java.util.Set;
 
 @SupportedAnnotationTypes("org.springframework.boot.context.properties.ConfigurationProperties")
-@SupportedSourceVersion(SourceVersion.RELEASE_21)
 public class SpringPropertiesMdProcessor extends AbstractProcessor {
 
     private PropertyExtractor extractor;
     private MetadataJsonWriter jsonWriter;
+
+    @Override
+    public SourceVersion getSupportedSourceVersion() {
+        return SourceVersion.latestSupported();
+    }
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
