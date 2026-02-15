@@ -5,6 +5,7 @@
 - [Server Configuration](#server-configuration)
 - [Database Configuration](#database-configuration)
 - [Security Configuration](#security-configuration)
+- [Nested Configuration](#nested-configuration)
 
 
 ---
@@ -43,3 +44,16 @@ Security and authentication settings
 | `app.security.token-expiration` | `long` | Token expiration time in seconds |  | No |  | `3600` (1 hour), `86400` (1 day) |
 | `app.security.cors-enabled` | `boolean` | Enable CORS support |  | No |  |  |
 | `app.security.api-key` | `String` | Old API key (deprecated) |  | No |  |  |
+
+## Nested Configuration
+
+Nested property expansion test
+
+
+| Property | Type | Description | Default | Required | Constraints | Examples |
+|----------|------|-------------|---------|----------|-------------|----------|
+| `app.nested.name` | `String` | Simple name |  | No |  |  |
+| `app.nested.database.host` | `String` | DB host |  | Yes |  |  |
+| `app.nested.database.port` | `int` | DB port |  | No |  |  |
+| `app.nested.database.pool.size` | `int` | Pool size |  | No |  |  |
+| `app.nested.database.pool.timeout` | `long` | Pool timeout |  | No |  |  |

@@ -10,10 +10,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 class AnnotationTargetTest {
 
     @Test
-    void propertyDocTargetsFieldMethodParameter() {
+    void propertyDocTargetsFieldMethodParameterRecordComponent() {
         var targets = PropertyDoc.class.getAnnotation(Target.class).value();
         assertThat(targets).containsExactlyInAnyOrder(
-                ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER);
+                ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.RECORD_COMPONENT);
     }
 
     @Test
@@ -23,44 +23,44 @@ class AnnotationTargetTest {
     }
 
     @Test
-    void propertyExampleTargetsFieldMethodParameter() {
+    void propertyExampleTargetsFieldMethodParameterRecordComponent() {
         var targets = PropertyExample.class.getAnnotation(Target.class).value();
         assertThat(targets).containsExactlyInAnyOrder(
-                ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER);
+                ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.RECORD_COMPONENT);
     }
 
     @Test
-    void propertyDeprecationTargetsFieldMethodType() {
+    void propertyDeprecationTargetsFieldMethodTypeRecordComponent() {
         var targets = PropertyDeprecation.class.getAnnotation(Target.class).value();
         assertThat(targets).containsExactlyInAnyOrder(
-                ElementType.FIELD, ElementType.METHOD, ElementType.TYPE);
+                ElementType.FIELD, ElementType.METHOD, ElementType.TYPE, ElementType.RECORD_COMPONENT);
     }
 
     @Test
-    void propertyCategoryTargetsFieldMethodType() {
+    void propertyCategoryTargetsFieldMethodTypeRecordComponent() {
         var targets = PropertyCategory.class.getAnnotation(Target.class).value();
         assertThat(targets).containsExactlyInAnyOrder(
-                ElementType.FIELD, ElementType.METHOD, ElementType.TYPE);
+                ElementType.FIELD, ElementType.METHOD, ElementType.TYPE, ElementType.RECORD_COMPONENT);
     }
 
     @Test
-    void propertySinceTargetsFieldMethodType() {
+    void propertySinceTargetsFieldMethodTypeRecordComponent() {
         var targets = PropertySince.class.getAnnotation(Target.class).value();
         assertThat(targets).containsExactlyInAnyOrder(
-                ElementType.FIELD, ElementType.METHOD, ElementType.TYPE);
+                ElementType.FIELD, ElementType.METHOD, ElementType.TYPE, ElementType.RECORD_COMPONENT);
     }
 
     @Test
-    void propertySeeTargetsFieldMethodType() {
+    void propertySeeTargetsFieldMethodTypeRecordComponent() {
         var targets = PropertySee.class.getAnnotation(Target.class).value();
         assertThat(targets).containsExactlyInAnyOrder(
-                ElementType.FIELD, ElementType.METHOD, ElementType.TYPE);
+                ElementType.FIELD, ElementType.METHOD, ElementType.TYPE, ElementType.RECORD_COMPONENT);
     }
 
     @Test
-    void propertyCustomMetadataTargetsFieldMethodType() {
+    void propertyCustomMetadataTargetsFieldMethodTypeRecordComponent() {
         var targets = PropertyCustomMetadata.class.getAnnotation(Target.class).value();
         assertThat(targets).containsExactlyInAnyOrder(
-                ElementType.FIELD, ElementType.METHOD, ElementType.TYPE);
+                ElementType.FIELD, ElementType.METHOD, ElementType.TYPE, ElementType.RECORD_COMPONENT);
     }
 }

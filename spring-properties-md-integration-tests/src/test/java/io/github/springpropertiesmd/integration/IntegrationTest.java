@@ -97,6 +97,7 @@ class IntegrationTest {
         assertThat(content).contains("## Server Configuration");
         assertThat(content).contains("## Database Configuration");
         assertThat(content).contains("## Security Configuration");
+        assertThat(content).contains("## Nested Configuration");
         assertThat(content).contains("app.server.port");
         assertThat(content).contains("app.database.url");
         assertThat(content).contains("app.security.jwt-secret");
@@ -131,6 +132,46 @@ class IntegrationTest {
         String expected = Files.readString(Path.of("src/test/resources/expected-output.md"));
 
         assertThat(actual).isEqualTo(expected);
+    }
+
+    @Test
+    void enrichedMetadataContainsNestedGroup() throws IOException {
+        MetadataReader reader = new MetadataReader();
+        DocumentationBundle bundle = reader.readFromClassesDir(Path.of("target/classes"));
+
+        assertThat(bundle.groups()).anyMatch(g -> g.displayName().equals("Nested Configuration"));
+    }
+
+    @Test
+    void nestedPropertiesAreFlattenedToLeafKeys() throws IOException {
+        MetadataReader reader = new MetadataReader();
+        DocumentationBundle bundle = reader.readFromClassesDir(Path.of("target/classes"));
+
+        assertThat(bundle.properties()).anyMatch(p -> p.name().equals("app.nested.name"));
+        assertThat(bundle.properties()).anyMatch(p -> p.name().equals("app.nested.database.host"));
+        assertThat(bundle.properties()).anyMatch(p -> p.name().equals("app.nested.database.port"));
+        assertThat(bundle.properties()).anyMatch(p -> p.name().equals("app.nested.database.pool.size"));
+        assertThat(bundle.properties()).anyMatch(p -> p.name().equals("app.nested.database.pool.timeout"));
+    }
+
+    @Test
+    void nestedParentKeysAreNotEmittedAsProperties() throws IOException {
+        MetadataReader reader = new MetadataReader();
+        DocumentationBundle bundle = reader.readFromClassesDir(Path.of("target/classes"));
+
+        assertThat(bundle.properties()).noneMatch(p -> p.name().equals("app.nested.database"));
+        assertThat(bundle.properties()).noneMatch(p -> p.name().equals("app.nested.database.pool"));
+    }
+
+    @Test
+    void nestedPropertyRetainsAnnotationMetadata() throws IOException {
+        MetadataReader reader = new MetadataReader();
+        DocumentationBundle bundle = reader.readFromClassesDir(Path.of("target/classes"));
+
+        assertThat(bundle.properties()).anyMatch(p ->
+                p.name().equals("app.nested.database.host")
+                        && p.required()
+                        && p.description().equals("DB host"));
     }
 
     @Test

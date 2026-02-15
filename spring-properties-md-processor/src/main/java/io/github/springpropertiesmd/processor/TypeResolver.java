@@ -95,8 +95,35 @@ public class TypeResolver {
         return new PropertyType.SimpleType(fqcn, typeElement.getSimpleName().toString());
     }
 
+    public boolean isNestedType(TypeMirror typeMirror) {
+        if (typeMirror.getKind() != TypeKind.DECLARED) {
+            return false;
+        }
+        DeclaredType declaredType = (DeclaredType) typeMirror;
+        TypeElement typeElement = (TypeElement) declaredType.asElement();
+        return isNestedConfigurationProperties(typeElement);
+    }
+
+    public TypeElement toTypeElement(TypeMirror typeMirror) {
+        if (typeMirror.getKind() != TypeKind.DECLARED) {
+            return null;
+        }
+        return (TypeElement) ((DeclaredType) typeMirror).asElement();
+    }
+
+    private static final Set<String> EXCLUDED_PACKAGES = Set.of(
+            "java.", "javax.", "jakarta.", "org.springframework."
+    );
+
     private boolean isNestedConfigurationProperties(TypeElement typeElement) {
+        String fqcn = typeElement.getQualifiedName().toString();
+        for (String prefix : EXCLUDED_PACKAGES) {
+            if (fqcn.startsWith(prefix)) {
+                return false;
+            }
+        }
         return typeElement.getEnclosedElements().stream()
-                .anyMatch(e -> e.getKind() == ElementKind.FIELD);
+                .anyMatch(e -> e.getKind() == ElementKind.FIELD
+                        || e.getKind() == ElementKind.RECORD_COMPONENT);
     }
 }

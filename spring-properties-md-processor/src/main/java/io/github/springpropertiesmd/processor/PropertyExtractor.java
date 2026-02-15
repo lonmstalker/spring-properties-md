@@ -8,10 +8,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class PropertyExtractor {
 
@@ -47,24 +44,46 @@ public class PropertyExtractor {
     }
 
     public List<PropertyMetadata> extractProperties(TypeElement typeElement, String prefix) {
+        return extractProperties(typeElement, prefix, prefix, new HashSet<>());
+    }
+
+    private static boolean isPropertyElement(Element e) {
+        return e.getKind() == ElementKind.FIELD || e.getKind() == ElementKind.RECORD_COMPONENT;
+    }
+
+    private List<PropertyMetadata> extractProperties(TypeElement typeElement, String prefix,
+                                                     String groupPrefix, Set<String> visited) {
+        if (!visited.add(typeElement.getQualifiedName().toString())) {
+            return List.of();
+        }
+
         List<PropertyMetadata> properties = new ArrayList<>();
+        Set<String> processed = new HashSet<>();
 
         for (Element enclosed : typeElement.getEnclosedElements()) {
-            if (enclosed.getKind() != ElementKind.FIELD) {
+            if (!isPropertyElement(enclosed)) {
                 continue;
             }
-            if (enclosed.getSimpleName().toString().startsWith("$")) {
+            String name = enclosed.getSimpleName().toString();
+            if (name.startsWith("$") || !processed.add(name)) {
                 continue;
             }
 
-            VariableElement field = (VariableElement) enclosed;
-            properties.add(extractProperty(field, prefix, typeElement));
+            if (typeResolver.isNestedType(enclosed.asType())) {
+                String nestedPrefix = nameResolver.resolve(prefix, name);
+                TypeElement nested = typeResolver.toTypeElement(enclosed.asType());
+                if (nested != null) {
+                    properties.addAll(extractProperties(nested, nestedPrefix, groupPrefix, new HashSet<>(visited)));
+                }
+            } else {
+                properties.add(extractProperty(enclosed, prefix, groupPrefix, typeElement));
+            }
         }
 
         return properties;
     }
 
-    private PropertyMetadata extractProperty(VariableElement field, String prefix, TypeElement ownerType) {
+    private PropertyMetadata extractProperty(Element field, String prefix, String groupPrefix, TypeElement ownerType) {
         String fieldName = field.getSimpleName().toString();
         String propertyName = nameResolver.resolve(prefix, fieldName);
 
@@ -93,7 +112,7 @@ public class PropertyExtractor {
         String subcat = category != null ? category.subcategory() : null;
         String sinceVersion = since != null ? since.value() : null;
 
-        Object constantValue = field.getConstantValue();
+        Object constantValue = (field instanceof VariableElement ve) ? ve.getConstantValue() : null;
         String defaultValue = constantValue != null ? constantValue.toString() : null;
 
         String typeFqcn = field.asType().toString();
@@ -116,7 +135,7 @@ public class PropertyExtractor {
                 seeAlso,
                 customMetadata,
                 ownerType.getQualifiedName().toString(),
-                prefix
+                groupPrefix
         );
     }
 
