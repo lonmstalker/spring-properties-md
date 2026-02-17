@@ -36,6 +36,16 @@ class PropertyNameResolverTest {
     @Test
     void multipleUpperCaseLetters() {
         assertThat(resolver.resolve("app", "maxHTTPConnections"))
-                .isEqualTo("app.max-h-t-t-p-connections");
+                .isEqualTo("app.max-http-connections");
+    }
+
+    @Test
+    void singleAcronym() {
+        assertThat(resolver.resolve("app", "urlPath")).isEqualTo("app.url-path");
+    }
+
+    @Test
+    void trailingAcronym() {
+        assertThat(resolver.resolve("app", "baseURL")).isEqualTo("app.base-url");
     }
 }

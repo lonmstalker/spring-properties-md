@@ -18,7 +18,12 @@ public class PropertyNameResolver {
             char c = name.charAt(i);
             if (Character.isUpperCase(c)) {
                 if (i > 0) {
-                    result.append('-');
+                    char prev = name.charAt(i - 1);
+                    boolean prevUpper = Character.isUpperCase(prev);
+                    boolean nextLower = i + 1 < name.length() && Character.isLowerCase(name.charAt(i + 1));
+                    if (!prevUpper || nextLower) {
+                        result.append('-');
+                    }
                 }
                 result.append(Character.toLowerCase(c));
             } else {

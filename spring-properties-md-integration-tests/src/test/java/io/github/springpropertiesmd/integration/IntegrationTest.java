@@ -175,6 +175,15 @@ class IntegrationTest {
     }
 
     @Test
+    void staticConstantsAreExcludedFromProperties() throws IOException {
+        MetadataReader reader = new MetadataReader();
+        DocumentationBundle bundle = reader.readFromClassesDir(Path.of("target/classes"));
+
+        assertThat(bundle.properties()).noneMatch(p ->
+                p.name().contains("d-e-f-a-u-l-t") || p.name().contains("DEFAULT"));
+    }
+
+    @Test
     void mavenPluginGeneratesMarkdownFile() {
         Path generatedFile = Path.of("target/configuration-properties.md");
         assertThat(generatedFile).exists();

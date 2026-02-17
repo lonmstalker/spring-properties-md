@@ -6,6 +6,7 @@ import io.github.springpropertiesmd.api.model.*;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import java.util.*;
@@ -48,7 +49,10 @@ public class PropertyExtractor {
     }
 
     private static boolean isPropertyElement(Element e) {
-        return e.getKind() == ElementKind.FIELD || e.getKind() == ElementKind.RECORD_COMPONENT;
+        if (e.getKind() == ElementKind.RECORD_COMPONENT) {
+            return true;
+        }
+        return e.getKind() == ElementKind.FIELD && !e.getModifiers().contains(Modifier.STATIC);
     }
 
     private List<PropertyMetadata> extractProperties(TypeElement typeElement, String prefix,

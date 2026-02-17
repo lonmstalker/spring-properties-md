@@ -12,6 +12,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 )
 public class ServerProperties {
 
+    private static final int DEFAULT_PORT = 8080;
+
     @PropertyDoc(description = "Server port number", required = Requirement.REQUIRED)
     @PropertyExample(value = "8080", description = "default")
     @PropertyExample(value = "443", description = "HTTPS")
