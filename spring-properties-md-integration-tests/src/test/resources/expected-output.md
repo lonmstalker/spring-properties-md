@@ -6,6 +6,7 @@
 - [Database Configuration](#database-configuration)
 - [Security Configuration](#security-configuration)
 - [Nested Configuration](#nested-configuration)
+- [Collection Configuration](#collection-configuration)
 
 
 ---
@@ -57,3 +58,21 @@ Nested property expansion test
 | `app.nested.database.port` | `int` | DB port |  | No |  |  |
 | `app.nested.database.pool.size` | `int` | Pool size |  | No |  |  |
 | `app.nested.database.pool.timeout` | `long` | Pool timeout |  | No |  |  |
+
+## Collection Configuration
+
+Collection, map and enum property tests
+
+
+| Property | Type | Description | Default | Required | Constraints | Examples |
+|----------|------|-------------|---------|----------|-------------|----------|
+| `app.collection.endpoints[].url` | `String` | Endpoint URL |  | No |  |  |
+| `app.collection.endpoints[].timeout` | `int` | Timeout in ms |  | No |  |  |
+| `app.collection.tags` | `List<String>` | Tags list |  | No |  |  |
+| `app.collection.data-sources.*.url` | `String` | JDBC URL |  | No |  |  |
+| `app.collection.data-sources.*.username` | `String` | DB username |  | No |  |  |
+| `app.collection.data-sources.*.pool.max-size` | `int` | Max pool size |  | No |  |  |
+| `app.collection.settings` | `Map<String, String>` | Settings map |  | No |  |  |
+| `app.collection.log-level` | `LogLevel (TRACE, DEBUG, INFO, WARN, ERROR)` | Log level |  | No |  |  |
+| `app.collection.active-log-levels` | `List<LogLevel (TRACE, DEBUG, INFO, WARN, ERROR)>` | Active log levels |  | No |  |  |
+| `app.collection.level-overrides` | `Map<String, LogLevel (TRACE, DEBUG, INFO, WARN, ERROR)>` | Level overrides |  | No |  |  |

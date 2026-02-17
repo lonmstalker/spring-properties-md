@@ -9,6 +9,7 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeMirror;
 import java.util.*;
 
 public class PropertyExtractor {
@@ -73,18 +74,91 @@ public class PropertyExtractor {
                 continue;
             }
 
-            if (typeResolver.isNestedType(enclosed.asType())) {
-                String nestedPrefix = nameResolver.resolve(prefix, name);
-                TypeElement nested = typeResolver.toTypeElement(enclosed.asType());
-                if (nested != null) {
-                    properties.addAll(extractProperties(nested, nestedPrefix, groupPrefix, new HashSet<>(visited)));
+            PropertyType propertyType = typeResolver.resolve(enclosed.asType());
+
+            switch (propertyType) {
+                case PropertyType.NestedType nt -> {
+                    String nestedPrefix = nameResolver.resolve(prefix, name);
+                    TypeElement nested = typeResolver.toTypeElement(enclosed.asType());
+                    if (nested != null) {
+                        properties.addAll(extractProperties(nested, nestedPrefix, groupPrefix, new HashSet<>(visited)));
+                    }
                 }
-            } else {
-                properties.add(extractProperty(enclosed, prefix, groupPrefix, typeElement));
+                case PropertyType.CollectionType ct ->
+                    properties.addAll(handleCollectionType(ct, enclosed, prefix, groupPrefix, visited, name));
+                case PropertyType.MapType mt ->
+                    properties.addAll(handleMapType(mt, enclosed, prefix, groupPrefix, visited, name));
+                case PropertyType.EnumType et ->
+                    properties.add(extractPropertyWithTypeDisplay(enclosed, prefix, groupPrefix, typeElement, formatEnumTypeDisplay(et)));
+                case PropertyType.SimpleType st ->
+                    properties.add(extractProperty(enclosed, prefix, groupPrefix, typeElement));
             }
         }
 
         return properties;
+    }
+
+    private List<PropertyMetadata> handleCollectionType(PropertyType.CollectionType ct, Element enclosed,
+                                                         String prefix, String groupPrefix,
+                                                         Set<String> visited, String name) {
+        if (ct.elementType() instanceof PropertyType.NestedType) {
+            String nestedPrefix = nameResolver.resolve(prefix, name) + "[]";
+            TypeMirror elementMirror = typeResolver.getElementTypeMirror(enclosed.asType());
+            TypeElement nested = elementMirror != null ? typeResolver.toTypeElement(elementMirror) : null;
+            if (nested != null) {
+                return extractProperties(nested, nestedPrefix, groupPrefix, new HashSet<>(visited));
+            }
+        }
+        return List.of(extractPropertyWithTypeDisplay(enclosed, prefix, groupPrefix,
+                (TypeElement) enclosed.getEnclosingElement(), typeDisplayName(ct)));
+    }
+
+    private List<PropertyMetadata> handleMapType(PropertyType.MapType mt, Element enclosed,
+                                                   String prefix, String groupPrefix,
+                                                   Set<String> visited, String name) {
+        if (mt.valueType() instanceof PropertyType.NestedType) {
+            String nestedPrefix = nameResolver.resolve(prefix, name) + ".*";
+            TypeMirror valueMirror = typeResolver.getElementTypeMirror(enclosed.asType());
+            TypeElement nested = valueMirror != null ? typeResolver.toTypeElement(valueMirror) : null;
+            if (nested != null) {
+                return extractProperties(nested, nestedPrefix, groupPrefix, new HashSet<>(visited));
+            }
+        }
+        return List.of(extractPropertyWithTypeDisplay(enclosed, prefix, groupPrefix,
+                (TypeElement) enclosed.getEnclosingElement(), typeDisplayName(mt)));
+    }
+
+    private PropertyMetadata extractPropertyWithTypeDisplay(Element field, String prefix, String groupPrefix,
+                                                             TypeElement ownerType, String computedTypeDisplay) {
+        PropertyMetadata base = extractProperty(field, prefix, groupPrefix, ownerType);
+        if (base.typeDisplay() != null && !base.typeDisplay().isEmpty()) {
+            return base;
+        }
+        return new PropertyMetadata(
+                base.name(), base.type(), computedTypeDisplay, base.description(),
+                base.defaultValue(), base.required(), base.sensitive(), base.profiles(),
+                base.deprecation(), base.examples(), base.constraints(),
+                base.category(), base.subcategory(), base.since(),
+                base.seeAlso(), base.customMetadata(), base.sourceType(), base.groupName()
+        );
+    }
+
+    private String typeDisplayName(PropertyType type) {
+        return switch (type) {
+            case PropertyType.SimpleType st -> st.displayName();
+            case PropertyType.EnumType et -> formatEnumTypeDisplay(et);
+            case PropertyType.CollectionType ct -> {
+                String collectionSimple = ct.collectionFqcn().substring(ct.collectionFqcn().lastIndexOf('.') + 1);
+                yield collectionSimple + "<" + typeDisplayName(ct.elementType()) + ">";
+            }
+            case PropertyType.MapType mt -> "Map<" + typeDisplayName(mt.keyType()) + ", " + typeDisplayName(mt.valueType()) + ">";
+            case PropertyType.NestedType nt -> nt.fqcn().substring(nt.fqcn().lastIndexOf('.') + 1);
+        };
+    }
+
+    private String formatEnumTypeDisplay(PropertyType.EnumType et) {
+        String simpleName = et.fqcn().substring(et.fqcn().lastIndexOf('.') + 1);
+        return simpleName + " (" + String.join(", ", et.allowedValues()) + ")";
     }
 
     private PropertyMetadata extractProperty(Element field, String prefix, String groupPrefix, TypeElement ownerType) {

@@ -85,8 +85,7 @@ public class MarkdownFormatter {
             return prop.typeDisplay();
         }
         if (prop.type() == null) return "";
-        int dot = prop.type().lastIndexOf('.');
-        return dot >= 0 ? prop.type().substring(dot + 1) : prop.type();
+        return prop.type().replaceAll("\\b([a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*)\\.([A-Z])", "$3");
     }
 
     private String defaultValueOf(PropertyMetadata prop) {

@@ -32,6 +32,7 @@ class IntegrationTest {
         assertThat(bundle.groups()).anyMatch(g -> g.displayName().equals("Server Configuration"));
         assertThat(bundle.groups()).anyMatch(g -> g.displayName().equals("Database Configuration"));
         assertThat(bundle.groups()).anyMatch(g -> g.displayName().equals("Security Configuration"));
+        assertThat(bundle.groups()).anyMatch(g -> g.displayName().equals("Collection Configuration"));
     }
 
     @Test
@@ -98,6 +99,7 @@ class IntegrationTest {
         assertThat(content).contains("## Database Configuration");
         assertThat(content).contains("## Security Configuration");
         assertThat(content).contains("## Nested Configuration");
+        assertThat(content).contains("## Collection Configuration");
         assertThat(content).contains("app.server.port");
         assertThat(content).contains("app.database.url");
         assertThat(content).contains("app.security.jwt-secret");
@@ -181,6 +183,75 @@ class IntegrationTest {
 
         assertThat(bundle.properties()).noneMatch(p ->
                 p.name().contains("d-e-f-a-u-l-t") || p.name().contains("DEFAULT"));
+    }
+
+    @Test
+    void collectionOfNestedExpandedWithBracketNotation() throws IOException {
+        MetadataReader reader = new MetadataReader();
+        DocumentationBundle bundle = reader.readFromClassesDir(Path.of("target/classes"));
+
+        assertThat(bundle.properties()).anyMatch(p -> p.name().equals("app.collection.endpoints[].url"));
+        assertThat(bundle.properties()).anyMatch(p -> p.name().equals("app.collection.endpoints[].timeout"));
+    }
+
+    @Test
+    void mapOfNestedExpandedWithWildcardNotation() throws IOException {
+        MetadataReader reader = new MetadataReader();
+        DocumentationBundle bundle = reader.readFromClassesDir(Path.of("target/classes"));
+
+        assertThat(bundle.properties()).anyMatch(p -> p.name().equals("app.collection.data-sources.*.url"));
+        assertThat(bundle.properties()).anyMatch(p -> p.name().equals("app.collection.data-sources.*.username"));
+    }
+
+    @Test
+    void nestedInsideMapValueIsRecursivelyExpanded() throws IOException {
+        MetadataReader reader = new MetadataReader();
+        DocumentationBundle bundle = reader.readFromClassesDir(Path.of("target/classes"));
+
+        assertThat(bundle.properties()).anyMatch(p -> p.name().equals("app.collection.data-sources.*.pool.max-size"));
+    }
+
+    @Test
+    void enumFieldShowsAllowedValues() throws IOException {
+        MetadataReader reader = new MetadataReader();
+        DocumentationBundle bundle = reader.readFromClassesDir(Path.of("target/classes"));
+
+        assertThat(bundle.properties()).anyMatch(p ->
+                p.name().equals("app.collection.log-level")
+                        && p.typeDisplay() != null
+                        && p.typeDisplay().contains("TRACE")
+                        && p.typeDisplay().contains("ERROR"));
+    }
+
+    @Test
+    void simpleCollectionIsLeafWithProperDisplay() throws IOException {
+        MetadataReader reader = new MetadataReader();
+        DocumentationBundle bundle = reader.readFromClassesDir(Path.of("target/classes"));
+
+        assertThat(bundle.properties()).anyMatch(p ->
+                p.name().equals("app.collection.tags")
+                        && p.typeDisplay() != null
+                        && p.typeDisplay().equals("List<String>"));
+    }
+
+    @Test
+    void simpleMapIsLeafWithProperDisplay() throws IOException {
+        MetadataReader reader = new MetadataReader();
+        DocumentationBundle bundle = reader.readFromClassesDir(Path.of("target/classes"));
+
+        assertThat(bundle.properties()).anyMatch(p ->
+                p.name().equals("app.collection.settings")
+                        && p.typeDisplay() != null
+                        && p.typeDisplay().equals("Map<String, String>"));
+    }
+
+    @Test
+    void collectionAndMapParentKeysAreNotEmitted() throws IOException {
+        MetadataReader reader = new MetadataReader();
+        DocumentationBundle bundle = reader.readFromClassesDir(Path.of("target/classes"));
+
+        assertThat(bundle.properties()).noneMatch(p -> p.name().equals("app.collection.endpoints"));
+        assertThat(bundle.properties()).noneMatch(p -> p.name().equals("app.collection.data-sources"));
     }
 
     @Test

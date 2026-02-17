@@ -8,6 +8,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.WildcardType;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -102,6 +103,34 @@ public class TypeResolver {
         DeclaredType declaredType = (DeclaredType) typeMirror;
         TypeElement typeElement = (TypeElement) declaredType.asElement();
         return isNestedConfigurationProperties(typeElement);
+    }
+
+    public TypeMirror getElementTypeMirror(TypeMirror typeMirror) {
+        TypeMirror unwrapped = unwrapWildcard(typeMirror);
+        if (unwrapped.getKind() != TypeKind.DECLARED) {
+            return null;
+        }
+        DeclaredType declaredType = (DeclaredType) unwrapped;
+        TypeElement typeElement = (TypeElement) declaredType.asElement();
+        String fqcn = typeElement.getQualifiedName().toString();
+
+        if (COLLECTION_TYPES.contains(fqcn) && !declaredType.getTypeArguments().isEmpty()) {
+            return unwrapWildcard(declaredType.getTypeArguments().getFirst());
+        }
+        if (fqcn.equals("java.util.Map") && declaredType.getTypeArguments().size() == 2) {
+            return unwrapWildcard(declaredType.getTypeArguments().get(1));
+        }
+        return null;
+    }
+
+    private TypeMirror unwrapWildcard(TypeMirror typeMirror) {
+        if (typeMirror.getKind() == TypeKind.WILDCARD) {
+            WildcardType wildcard = (WildcardType) typeMirror;
+            if (wildcard.getExtendsBound() != null) {
+                return wildcard.getExtendsBound();
+            }
+        }
+        return typeMirror;
     }
 
     public TypeElement toTypeElement(TypeMirror typeMirror) {

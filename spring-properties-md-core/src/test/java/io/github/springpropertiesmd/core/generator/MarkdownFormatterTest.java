@@ -110,6 +110,35 @@ class MarkdownFormatterTest {
     }
 
     @Test
+    void genericTypeDisplayStripsPackagePrefixes() {
+        var prop = new PropertyMetadata(
+                "app.tags", "java.util.List<java.lang.String>", null,
+                "Tags", null, false, false,
+                null, null, null, null,
+                null, null, null, null, null, null, null
+        );
+        var table = new MarkdownSection.PropertyTable(List.of(prop), false, false);
+        String result = formatter.render(table);
+
+        assertThat(result).contains("| `List<String>` ");
+        assertThat(result).doesNotContain("| `String>` ");
+    }
+
+    @Test
+    void genericMapTypeDisplayStripsPackagePrefixes() {
+        var prop = new PropertyMetadata(
+                "app.settings", "java.util.Map<java.lang.String, java.lang.Integer>", null,
+                "Settings", null, false, false,
+                null, null, null, null,
+                null, null, null, null, null, null, null
+        );
+        var table = new MarkdownSection.PropertyTable(List.of(prop), false, false);
+        String result = formatter.render(table);
+
+        assertThat(result).contains("| `Map<String, Integer>` ");
+    }
+
+    @Test
     void toAnchor() {
         assertThat(MarkdownFormatter.toAnchor("Server Configuration")).isEqualTo("server-configuration");
         assertThat(MarkdownFormatter.toAnchor("DB (Main)")).isEqualTo("db-main");
