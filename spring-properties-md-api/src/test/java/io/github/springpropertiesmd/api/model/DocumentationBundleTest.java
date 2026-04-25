@@ -61,5 +61,31 @@ class DocumentationBundleTest {
         var bundle = new DocumentationBundle(null, null);
         assertThat(bundle.groups()).isEmpty();
         assertThat(bundle.properties()).isEmpty();
+        assertThat(bundle.conditions()).isEmpty();
+    }
+
+    @Test
+    void defensiveCopyOfConditions() {
+        var conditions = new ArrayList<>(List.of(condition()));
+        var bundle = new DocumentationBundle(List.of(), List.of(), conditions);
+
+        conditions.add(new PropertyConditionMetadata("com.example.Other", "other",
+                ConditionOwnerType.PROPERTY_GROUP, List.of()));
+        assertThat(bundle.conditions()).hasSize(1);
+    }
+
+    @Test
+    void conditionsListIsUnmodifiable() {
+        var bundle = new DocumentationBundle(List.of(), List.of(), List.of(condition()));
+
+        assertThatThrownBy(() -> bundle.conditions().add(condition()))
+                .isInstanceOf(UnsupportedOperationException.class);
+    }
+
+    private PropertyConditionMetadata condition() {
+        return new PropertyConditionMetadata("com.example.RedisConfiguration", "app.redis",
+                ConditionOwnerType.PROPERTY_GROUP,
+                List.of(new PropertyRequirement("app.redis.enabled", "true", true,
+                        PropertyConditionMatchMode.EQUALS_VALUE, true)));
     }
 }

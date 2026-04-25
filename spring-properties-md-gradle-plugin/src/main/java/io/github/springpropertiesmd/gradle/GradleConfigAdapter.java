@@ -1,5 +1,8 @@
 package io.github.springpropertiesmd.gradle;
 
+import io.github.springpropertiesmd.core.check.ConditionCheckConfig;
+import io.github.springpropertiesmd.core.config.ConditionConfig;
+import io.github.springpropertiesmd.core.config.ExternalConditionMode;
 import io.github.springpropertiesmd.core.config.GeneratorConfig;
 import io.github.springpropertiesmd.core.config.OutputStyle;
 import io.github.springpropertiesmd.core.config.SensitiveMode;
@@ -27,7 +30,29 @@ public class GradleConfigAdapter {
                 extension.getIncludeValidation().get(),
                 extension.getIncludeExamples().get(),
                 sensitiveModeOf(extension.getSensitiveMode().get()),
-                extension.getIncludeCustomMetadata().get()
+                extension.getIncludeCustomMetadata().get(),
+                conditionConfig(extension.getConditions())
+        );
+    }
+
+    static ConditionConfig conditionConfig(SpringPropertiesMdExtension.ConditionsExtension conditions) {
+        return new ConditionConfig(
+                conditions.getEnabled().get(),
+                conditions.getSpringConditionalOnProperty().get(),
+                externalConditionModeOf(conditions.getExternalConditionMode().get()),
+                conditions.getExternalConditionsOutputFile().isPresent()
+                        ? Path.of(conditions.getExternalConditionsOutputFile().get())
+                        : null
+        );
+    }
+
+    static ConditionCheckConfig conditionCheckConfig(SpringPropertiesMdExtension.ConditionsExtension conditions) {
+        SpringPropertiesMdExtension.ConditionChecksExtension checks = conditions.getChecks();
+        return new ConditionCheckConfig(
+                checks.getFailOnUndocumentedLocalConditionProperty().get(),
+                checks.getWarnOnExternalConditionProperty().get(),
+                checks.getWarnOnCollectionConditionProperty().get(),
+                checks.getWarnOnNonDashedConditionName().get()
         );
     }
 
@@ -44,6 +69,14 @@ public class GradleConfigAdapter {
             return SensitiveMode.valueOf(sensitiveMode);
         } catch (IllegalArgumentException | NullPointerException e) {
             return SensitiveMode.REDACT;
+        }
+    }
+
+    static ExternalConditionMode externalConditionModeOf(String externalConditionMode) {
+        try {
+            return ExternalConditionMode.valueOf(externalConditionMode);
+        } catch (IllegalArgumentException | NullPointerException e) {
+            return ExternalConditionMode.WARN;
         }
     }
 }

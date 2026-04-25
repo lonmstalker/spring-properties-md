@@ -74,6 +74,27 @@ class MetadataJsonWriterTest {
     }
 
     @Test
+    void serializeWithConditions() throws IOException {
+        var condition = new PropertyConditionMetadata(
+                "com.example.RedisConfiguration",
+                "app.redis",
+                ConditionOwnerType.PROPERTY_GROUP,
+                List.of(new PropertyRequirement("app.redis.enabled", "true", true,
+                        PropertyConditionMatchMode.EQUALS_VALUE, true))
+        );
+        var bundle = new DocumentationBundle(List.of(), List.of(), List.of(condition));
+
+        String json = writer.toJson(bundle);
+        DocumentationBundle result = writer.fromJson(json);
+
+        assertThat(result.conditions()).hasSize(1);
+        assertThat(result.conditions().getFirst().ownerId()).isEqualTo("app.redis");
+        assertThat(result.conditions().getFirst().requirements().getFirst().propertyName())
+                .isEqualTo("app.redis.enabled");
+        assertThat(result.conditions().getFirst().requirements().getFirst().local()).isTrue();
+    }
+
+    @Test
     void jsonContainsExpectedFields() throws IOException {
         var bundle = new DocumentationBundle(
                 List.of(new GroupMetadata("test", "Test", "desc", "com.Test", "cat", 0)),

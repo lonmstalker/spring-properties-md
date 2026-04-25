@@ -67,6 +67,9 @@ public class CheckDocsMojo extends AbstractMojo {
     @Parameter(defaultValue = "false")
     private boolean failIfGeneratedDocsChanged;
 
+    @Parameter
+    private ConditionsMojoConfig conditions = new ConditionsMojoConfig();
+
     @Parameter(defaultValue = "${project.build.outputDirectory}", readonly = true)
     private String classesDirectory;
 
@@ -83,7 +86,7 @@ public class CheckDocsMojo extends AbstractMojo {
             GeneratorConfig generatorConfig = new MojoConfigAdapter().adapt(
                     Path.of(outputFile), Path.of(outputDirectory), title, outputStyle, sensitiveMode,
                     includeTableOfContents, includeDeprecated, includeValidation,
-                    includeExamples, includeCustomMetadata
+                    includeExamples, includeCustomMetadata, conditions
             );
             CheckConfig checkConfig = new CheckConfig(
                     failOnMissingDescription,
@@ -91,7 +94,8 @@ public class CheckDocsMojo extends AbstractMojo {
                     failOnDeprecatedWithoutReplacement,
                     failOnRequiredWithoutExample,
                     failOnDuplicatePropertyNames,
-                    failIfGeneratedDocsChanged
+                    failIfGeneratedDocsChanged,
+                    new MojoConfigAdapter().conditionCheckConfig(conditions)
             );
             DocumentationCheckResult result = new DocumentationChecker(new TableMarkdownGenerator())
                     .check(bundle, generatorConfig, checkConfig);

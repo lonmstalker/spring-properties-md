@@ -48,6 +48,9 @@ public class GenerateDocsMojo extends AbstractMojo {
     @Parameter(defaultValue = "false")
     private boolean includeCustomMetadata;
 
+    @Parameter
+    private ConditionsMojoConfig conditions = new ConditionsMojoConfig();
+
     @Parameter(defaultValue = "${project.build.outputDirectory}", readonly = true)
     private String classesDirectory;
 
@@ -67,7 +70,7 @@ public class GenerateDocsMojo extends AbstractMojo {
             GeneratorConfig config = adapter.adapt(
                     Path.of(outputFile), Path.of(outputDirectory), title, outputStyle, sensitiveMode,
                     includeTableOfContents, includeDeprecated, includeValidation,
-                    includeExamples, includeCustomMetadata
+                    includeExamples, includeCustomMetadata, conditions
             );
 
             TableMarkdownGenerator generator = new TableMarkdownGenerator();

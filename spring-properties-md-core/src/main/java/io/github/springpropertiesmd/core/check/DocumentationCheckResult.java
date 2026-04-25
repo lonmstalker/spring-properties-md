@@ -9,16 +9,22 @@ public record DocumentationCheckResult(List<DocumentationIssue> issues) {
     }
 
     public boolean passed() {
-        return issues.isEmpty();
+        return issues.stream().noneMatch(issue -> issue.severity() == DocumentationIssueSeverity.ERROR);
     }
 
     public String format() {
-        if (passed()) {
+        if (issues.isEmpty()) {
             return "Configuration documentation checks passed.";
         }
-        StringBuilder sb = new StringBuilder("Configuration documentation checks failed:");
+        StringBuilder sb = new StringBuilder(passed()
+                ? "Configuration documentation checks passed with warnings:"
+                : "Configuration documentation checks failed:");
         for (DocumentationIssue issue : issues) {
-            sb.append(System.lineSeparator()).append("- ").append(issue.message());
+            sb.append(System.lineSeparator()).append("- ");
+            if (issue.severity() == DocumentationIssueSeverity.WARNING) {
+                sb.append("Warning: ");
+            }
+            sb.append(issue.message());
         }
         return sb.toString();
     }

@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 
 public class MarkdownFormatter {
 
+    private final ConditionTextFormatter conditionFormatter = new ConditionTextFormatter();
+
     public String render(MarkdownSection section) {
         return switch (section) {
             case MarkdownSection.Title t -> "# " + t.text() + "\n";
@@ -49,6 +51,9 @@ public class MarkdownFormatter {
         if (table.includeExamples()) {
             sb.append(" Examples |");
         }
+        if (hasConditions(table)) {
+            sb.append(" Effective when |");
+        }
         sb.append("\n");
 
         sb.append("|----------|------|-------------|---------|----------|");
@@ -57,6 +62,9 @@ public class MarkdownFormatter {
         }
         if (table.includeExamples()) {
             sb.append("----------|");
+        }
+        if (hasConditions(table)) {
+            sb.append("----------------|");
         }
         sb.append("\n");
 
@@ -74,10 +82,19 @@ public class MarkdownFormatter {
             if (table.includeExamples()) {
                 sb.append(" ").append(formatExamples(prop.examples())).append(" |");
             }
+            if (hasConditions(table)) {
+                sb.append(" ").append(escapeCell(conditionFormatter.inline(
+                        table.conditionsByProperty().getOrDefault(prop.name(), List.of())
+                ))).append(" |");
+            }
             sb.append("\n");
         }
 
         return sb.toString();
+    }
+
+    private boolean hasConditions(MarkdownSection.PropertyTable table) {
+        return table.conditionsByProperty().values().stream().anyMatch(conditions -> !conditions.isEmpty());
     }
 
     private String typeDisplayOf(PropertyMetadata prop) {

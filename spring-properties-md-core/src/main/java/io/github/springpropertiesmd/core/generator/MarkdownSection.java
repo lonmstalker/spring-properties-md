@@ -1,8 +1,10 @@
 package io.github.springpropertiesmd.core.generator;
 
+import io.github.springpropertiesmd.api.model.PropertyConditionMetadata;
 import io.github.springpropertiesmd.api.model.PropertyMetadata;
 
 import java.util.List;
+import java.util.Map;
 
 public sealed interface MarkdownSection {
 
@@ -18,7 +20,15 @@ public sealed interface MarkdownSection {
     }
 
     record PropertyTable(List<PropertyMetadata> properties, boolean includeValidation,
-                         boolean includeExamples) implements MarkdownSection {
+                         boolean includeExamples,
+                         Map<String, List<PropertyConditionMetadata>> conditionsByProperty) implements MarkdownSection {
+        public PropertyTable(List<PropertyMetadata> properties, boolean includeValidation, boolean includeExamples) {
+            this(properties, includeValidation, includeExamples, Map.of());
+        }
+
+        public PropertyTable {
+            conditionsByProperty = conditionsByProperty == null ? Map.of() : Map.copyOf(conditionsByProperty);
+        }
     }
 
     record DeprecationNotice(String message) implements MarkdownSection {

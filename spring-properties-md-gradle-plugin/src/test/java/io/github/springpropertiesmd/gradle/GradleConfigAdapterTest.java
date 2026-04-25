@@ -1,6 +1,7 @@
 package io.github.springpropertiesmd.gradle;
 
 import io.github.springpropertiesmd.core.config.GeneratorConfig;
+import io.github.springpropertiesmd.core.config.ExternalConditionMode;
 import io.github.springpropertiesmd.core.config.OutputStyle;
 import io.github.springpropertiesmd.core.config.SensitiveMode;
 import org.gradle.api.Project;
@@ -33,6 +34,9 @@ class GradleConfigAdapterTest {
         assertThat(config.outputStyle()).isEqualTo(OutputStyle.SINGLE_FILE);
         assertThat(config.sensitiveMode()).isEqualTo(SensitiveMode.REDACT);
         assertThat(config.includeTableOfContents()).isTrue();
+        assertThat(config.conditions().enabled()).isTrue();
+        assertThat(config.conditions().springConditionalOnProperty()).isTrue();
+        assertThat(config.conditions().externalConditionMode()).isEqualTo(ExternalConditionMode.WARN);
     }
 
     @Test
@@ -48,6 +52,10 @@ class GradleConfigAdapterTest {
         extension.getOutputDirectory().set("/custom/path");
         extension.getSensitiveMode().set("OMIT");
         extension.getIncludeTableOfContents().set(false);
+        extension.conditions(conditions -> {
+            conditions.getExternalConditionMode().set("SEPARATE_FILE");
+            conditions.getExternalConditionsOutputFile().set("/custom/external.md");
+        });
 
         GeneratorConfig config = adapter.adapt(extension, Path.of("default.md"), Path.of("default"));
 
@@ -57,5 +65,7 @@ class GradleConfigAdapterTest {
         assertThat(config.outputStyle()).isEqualTo(OutputStyle.PER_GROUP);
         assertThat(config.sensitiveMode()).isEqualTo(SensitiveMode.OMIT);
         assertThat(config.includeTableOfContents()).isFalse();
+        assertThat(config.conditions().externalConditionMode()).isEqualTo(ExternalConditionMode.SEPARATE_FILE);
+        assertThat(config.conditions().externalConditionsOutputFile()).isEqualTo(Path.of("/custom/external.md"));
     }
 }

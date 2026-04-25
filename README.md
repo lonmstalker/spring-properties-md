@@ -169,6 +169,49 @@ Property-level annotations are read from fields, record components, JavaBean get
 | `includeExamples` | `true` | Show examples |
 | `includeCustomMetadata` | `false` | Show custom metadata |
 
+### Property Conditions
+
+The generator can document local `@ConditionalOnProperty` relationships without turning the docs into bean or auto-configuration documentation. Main Markdown still contains only current-project configuration properties.
+
+```groovy
+springPropertiesMd {
+    conditions {
+        enabled = true
+        springConditionalOnProperty = true
+        externalConditionMode = 'WARN' // IGNORE, WARN, SEPARATE_FILE
+        externalConditionsOutputFile = 'docs/external-property-conditions.md'
+
+        checks {
+            failOnUndocumentedLocalConditionProperty = true
+            warnOnExternalConditionProperty = true
+            warnOnCollectionConditionProperty = true
+            warnOnNonDashedConditionName = true
+        }
+    }
+}
+```
+
+Maven uses the same nested shape:
+
+```xml
+<conditions>
+    <enabled>true</enabled>
+    <springConditionalOnProperty>true</springConditionalOnProperty>
+    <externalConditionMode>WARN</externalConditionMode>
+    <externalConditionsOutputFile>
+        ${project.basedir}/docs/external-property-conditions.md
+    </externalConditionsOutputFile>
+    <checks>
+        <failOnUndocumentedLocalConditionProperty>true</failOnUndocumentedLocalConditionProperty>
+        <warnOnExternalConditionProperty>true</warnOnExternalConditionProperty>
+        <warnOnCollectionConditionProperty>true</warnOnCollectionConditionProperty>
+        <warnOnNonDashedConditionName>true</warnOnNonDashedConditionName>
+    </checks>
+</conditions>
+```
+
+Local conditions render as an `Applies when` block for the group and as an `Effective when` column for affected properties. External property references are ignored, warned about, or written to a separate external conditions file depending on `externalConditionMode`.
+
 ### Documentation Checks
 
 The Maven plugin also provides an explicit quality gate goal:

@@ -1,6 +1,7 @@
 package io.github.springpropertiesmd.maven;
 
 import io.github.springpropertiesmd.core.config.GeneratorConfig;
+import io.github.springpropertiesmd.core.config.ExternalConditionMode;
 import io.github.springpropertiesmd.core.config.OutputStyle;
 import io.github.springpropertiesmd.core.config.SensitiveMode;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,8 @@ class MojoConfigAdapterTest {
         assertThat(config.outputStyle()).isEqualTo(OutputStyle.SINGLE_FILE);
         assertThat(config.sensitiveMode()).isEqualTo(SensitiveMode.REDACT);
         assertThat(config.includeTableOfContents()).isTrue();
+        assertThat(config.conditions().enabled()).isTrue();
+        assertThat(config.conditions().externalConditionMode()).isEqualTo(ExternalConditionMode.WARN);
     }
 
     @Test

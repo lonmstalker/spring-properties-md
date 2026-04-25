@@ -206,6 +206,121 @@ class SpringPropertiesMdProcessorCompileTest {
         assertThat(bundle.properties()).anyMatch(property -> property.name().equals("generated.name"));
     }
 
+    @Test
+    void extractsConditionalOnPropertyFromConfigurationPropertiesType() throws IOException {
+        Compilation compilation = compile("""
+                package com.example;
+
+                import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+                import org.springframework.boot.context.properties.ConfigurationProperties;
+
+                @ConfigurationProperties(prefix = "app.redis")
+                @ConditionalOnProperty(prefix = "app.redis", name = "enabled", havingValue = "true", matchIfMissing = true)
+                record RedisProperties(boolean enabled, String host) {
+                }
+                """);
+
+        assertThat(compilation).succeeded();
+        DocumentationBundle bundle = generatedBundle(compilation);
+        assertThat(bundle.conditions()).hasSize(1);
+        var condition = bundle.conditions().getFirst();
+        assertThat(condition.ownerId()).isEqualTo("app.redis");
+        assertThat(condition.sourceElement()).isEqualTo("com.example.RedisProperties");
+        assertThat(condition.requirements()).hasSize(1);
+        var requirement = condition.requirements().getFirst();
+        assertThat(requirement.propertyName()).isEqualTo("app.redis.enabled");
+        assertThat(requirement.havingValue()).isEqualTo("true");
+        assertThat(requirement.matchIfMissing()).isTrue();
+        assertThat(requirement.local()).isTrue();
+    }
+
+    @Test
+    void extractsConditionalOnPropertyFromEnableConfigurationPropertiesType() throws IOException {
+        Compilation compilation = compile("""
+                package com.example;
+
+                import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+                import org.springframework.boot.context.properties.ConfigurationProperties;
+                import org.springframework.boot.context.properties.EnableConfigurationProperties;
+
+                @ConfigurationProperties(prefix = "app.redis")
+                record RedisProperties(boolean enabled, String mode, String host) {
+                }
+
+                @ConditionalOnProperty(prefix = "app.redis", name = {"enabled", "mode"})
+                @EnableConfigurationProperties(RedisProperties.class)
+                class RedisConfiguration {
+                }
+                """);
+
+        assertThat(compilation).succeeded();
+        DocumentationBundle bundle = generatedBundle(compilation);
+        assertThat(bundle.conditions()).hasSize(1);
+        assertThat(bundle.conditions().getFirst().ownerId()).isEqualTo("app.redis");
+        assertThat(bundle.conditions().getFirst().sourceElement()).isEqualTo("com.example.RedisConfiguration");
+        assertThat(bundle.conditions().getFirst().requirements())
+                .extracting(requirement -> requirement.propertyName())
+                .containsExactly("app.redis.enabled", "app.redis.mode");
+    }
+
+    @Test
+    void extractsConditionalOnPropertyFromConfigurationPropertiesMethod() throws IOException {
+        Compilation compilation = compile("""
+                package com.example;
+
+                import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+                import org.springframework.boot.context.properties.ConfigurationProperties;
+
+                class RedisProperties {
+                    private boolean enabled;
+                    private String host;
+                }
+
+                class RedisConfiguration {
+                    @ConfigurationProperties(prefix = "app.redis")
+                    @ConditionalOnProperty(prefix = "app.redis", value = "enabled")
+                    RedisProperties redisProperties() {
+                        return new RedisProperties();
+                    }
+                }
+                """);
+
+        assertThat(compilation).succeeded();
+        DocumentationBundle bundle = generatedBundle(compilation);
+        assertThat(bundle.properties()).anyMatch(property -> property.name().equals("app.redis.host"));
+        assertThat(bundle.conditions()).hasSize(1);
+        assertThat(bundle.conditions().getFirst().ownerId()).isEqualTo("app.redis");
+        assertThat(bundle.conditions().getFirst().requirements().getFirst().propertyName())
+                .isEqualTo("app.redis.enabled");
+    }
+
+    @Test
+    void classifiesExternalAndUndocumentedLocalConditionProperties() throws IOException {
+        Compilation compilation = compile("""
+                package com.example;
+
+                import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+                import org.springframework.boot.context.properties.ConfigurationProperties;
+                import org.springframework.boot.context.properties.EnableConfigurationProperties;
+
+                @ConfigurationProperties(prefix = "app.redis")
+                record RedisProperties(String host) {
+                }
+
+                @ConditionalOnProperty(name = {"app.redis.enabled", "spring.datasource.url"})
+                @EnableConfigurationProperties(RedisProperties.class)
+                class RedisConfiguration {
+                }
+                """);
+
+        assertThat(compilation).succeeded();
+        DocumentationBundle bundle = generatedBundle(compilation);
+        assertThat(bundle.conditions()).hasSize(1);
+        assertThat(bundle.conditions().getFirst().requirements())
+                .extracting(requirement -> requirement.propertyName() + ":" + requirement.local())
+                .containsExactly("app.redis.enabled:true", "spring.datasource.url:false");
+    }
+
     private Compilation compile(String source) {
         return Compiler.javac()
                 .withProcessors(new SpringPropertiesMdProcessor())

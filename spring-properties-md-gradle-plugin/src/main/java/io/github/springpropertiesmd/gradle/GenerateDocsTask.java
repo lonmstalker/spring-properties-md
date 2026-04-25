@@ -2,6 +2,7 @@ package io.github.springpropertiesmd.gradle;
 
 import io.github.springpropertiesmd.api.model.DocumentationBundle;
 import io.github.springpropertiesmd.core.config.GeneratorConfig;
+import io.github.springpropertiesmd.core.config.ExternalConditionMode;
 import io.github.springpropertiesmd.core.generator.DocumentationFileWriter;
 import io.github.springpropertiesmd.core.generator.RenderedDocumentation;
 import io.github.springpropertiesmd.core.generator.TableMarkdownGenerator;
@@ -78,6 +79,31 @@ public abstract class GenerateDocsTask extends DefaultTask {
     @Input
     public abstract Property<Boolean> getIncludeCustomMetadata();
 
+    @Input
+    public abstract Property<Boolean> getConditionsEnabled();
+
+    @Input
+    public abstract Property<Boolean> getSpringConditionalOnProperty();
+
+    @Input
+    public abstract Property<String> getExternalConditionMode();
+
+    @Internal
+    public abstract Property<String> getExternalConditionsOutputFile();
+
+    @Optional
+    @OutputFile
+    public java.io.File getExternalConditionsFile() {
+        if (!getConditionsEnabled().get()
+                || !getSpringConditionalOnProperty().get()
+                || GradleConfigAdapter.externalConditionModeOf(getExternalConditionMode().get())
+                != ExternalConditionMode.SEPARATE_FILE) {
+            return null;
+        }
+        String configured = getExternalConditionsOutputFile().getOrNull();
+        return configured != null ? getProject().file(configured) : generatorConfig().conditions().externalConditionsOutputFile().toFile();
+    }
+
     @TaskAction
     public void generate() throws IOException {
         MetadataReader reader = new MetadataReader();
@@ -110,7 +136,15 @@ public abstract class GenerateDocsTask extends DefaultTask {
                 getIncludeValidation().get(),
                 getIncludeExamples().get(),
                 GradleConfigAdapter.sensitiveModeOf(getSensitiveMode().get()),
-                getIncludeCustomMetadata().get()
+                getIncludeCustomMetadata().get(),
+                new io.github.springpropertiesmd.core.config.ConditionConfig(
+                        getConditionsEnabled().get(),
+                        getSpringConditionalOnProperty().get(),
+                        GradleConfigAdapter.externalConditionModeOf(getExternalConditionMode().get()),
+                        getExternalConditionsOutputFile().isPresent()
+                                ? java.nio.file.Path.of(getExternalConditionsOutputFile().get())
+                                : null
+                )
         );
     }
 }

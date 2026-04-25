@@ -13,6 +13,7 @@ import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
@@ -73,6 +74,31 @@ public abstract class CheckDocsTask extends DefaultTask {
     @Input
     public abstract Property<Boolean> getFailIfGeneratedDocsChanged();
 
+    @Input
+    public abstract Property<Boolean> getConditionsEnabled();
+
+    @Input
+    public abstract Property<Boolean> getSpringConditionalOnProperty();
+
+    @Input
+    public abstract Property<String> getExternalConditionMode();
+
+    @Input
+    @Optional
+    public abstract Property<String> getExternalConditionsOutputFile();
+
+    @Input
+    public abstract Property<Boolean> getFailOnUndocumentedLocalConditionProperty();
+
+    @Input
+    public abstract Property<Boolean> getWarnOnExternalConditionProperty();
+
+    @Input
+    public abstract Property<Boolean> getWarnOnCollectionConditionProperty();
+
+    @Input
+    public abstract Property<Boolean> getWarnOnNonDashedConditionName();
+
     @TaskAction
     public void check() throws IOException {
         DocumentationBundle bundle = new MetadataReader()
@@ -101,7 +127,15 @@ public abstract class CheckDocsTask extends DefaultTask {
                 getIncludeValidation().get(),
                 getIncludeExamples().get(),
                 GradleConfigAdapter.sensitiveModeOf(getSensitiveMode().get()),
-                getIncludeCustomMetadata().get()
+                getIncludeCustomMetadata().get(),
+                new io.github.springpropertiesmd.core.config.ConditionConfig(
+                        getConditionsEnabled().get(),
+                        getSpringConditionalOnProperty().get(),
+                        GradleConfigAdapter.externalConditionModeOf(getExternalConditionMode().get()),
+                        getExternalConditionsOutputFile().isPresent()
+                                ? java.nio.file.Path.of(getExternalConditionsOutputFile().get())
+                                : null
+                )
         );
     }
 
@@ -112,7 +146,13 @@ public abstract class CheckDocsTask extends DefaultTask {
                 getFailOnDeprecatedWithoutReplacement().get(),
                 getFailOnRequiredWithoutExample().get(),
                 getFailOnDuplicatePropertyNames().get(),
-                getFailIfGeneratedDocsChanged().get()
+                getFailIfGeneratedDocsChanged().get(),
+                new io.github.springpropertiesmd.core.check.ConditionCheckConfig(
+                        getFailOnUndocumentedLocalConditionProperty().get(),
+                        getWarnOnExternalConditionProperty().get(),
+                        getWarnOnCollectionConditionProperty().get(),
+                        getWarnOnNonDashedConditionName().get()
+                )
         );
     }
 }

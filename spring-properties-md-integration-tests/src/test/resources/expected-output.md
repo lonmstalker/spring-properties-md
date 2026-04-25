@@ -7,6 +7,7 @@
 - [Security Configuration](#security-configuration)
 - [Nested Configuration](#nested-configuration)
 - [Collection Configuration](#collection-configuration)
+- [Redis Configuration](#redis-configuration)
 
 
 ---
@@ -76,3 +77,19 @@ Collection, map and enum property tests
 | `app.collection.log-level` | `LogLevel (TRACE, DEBUG, INFO, WARN, ERROR)` | Log level |  | No |  |  |
 | `app.collection.active-log-levels` | `List<LogLevel (TRACE, DEBUG, INFO, WARN, ERROR)>` | Active log levels |  | No |  |  |
 | `app.collection.level-overrides` | `Map<String, LogLevel (TRACE, DEBUG, INFO, WARN, ERROR)>` | Level overrides |  | No |  |  |
+
+## Redis Configuration
+
+Redis integration settings
+
+
+Applies when:
+
+- `app.redis.enabled=true`, or the property is missing
+
+
+| Property | Type | Description | Default | Required | Constraints | Examples | Effective when |
+|----------|------|-------------|---------|----------|-------------|----------|----------------|
+| `app.redis.enabled` | `boolean` | Enables Redis integration |  | No |  |  | `app.redis.enabled=true`, or the property is missing |
+| `app.redis.host` | `String` | Redis server host |  | No |  | `localhost` (local development) | `app.redis.enabled=true`, or the property is missing |
+| `app.redis.port` | `int` | Redis server port |  | No |  | `6379` (default) | `app.redis.enabled=true`, or the property is missing |

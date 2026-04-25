@@ -51,5 +51,9 @@ class SpringPropertiesMdPluginTest {
         assertThat(extension.getSensitiveMode().get()).isEqualTo("REDACT");
         assertThat(extension.getIncludeTableOfContents().get()).isTrue();
         assertThat(extension.getIncludeDeprecated().get()).isTrue();
+        assertThat(extension.getConditions().getEnabled().get()).isTrue();
+        assertThat(extension.getConditions().getSpringConditionalOnProperty().get()).isTrue();
+        assertThat(extension.getConditions().getExternalConditionMode().get()).isEqualTo("WARN");
+        assertThat(extension.getConditions().getChecks().getFailOnUndocumentedLocalConditionProperty().get()).isTrue();
     }
 }

@@ -30,7 +30,8 @@ public class SpringMetadataMerger {
 
         return new DocumentationBundle(
                 new ArrayList<>(groupMap.values()),
-                new ArrayList<>(propertyMap.values())
+                new ArrayList<>(propertyMap.values()),
+                enriched.conditions()
         );
     }
 

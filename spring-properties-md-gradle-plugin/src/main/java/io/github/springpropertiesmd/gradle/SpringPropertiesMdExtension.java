@@ -1,8 +1,14 @@
 package io.github.springpropertiesmd.gradle;
 
+import org.gradle.api.Action;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Property;
 
+import javax.inject.Inject;
+
 public abstract class SpringPropertiesMdExtension {
+
+    private final ConditionsExtension conditions;
 
     public abstract Property<String> getOutputFile();
 
@@ -36,7 +42,9 @@ public abstract class SpringPropertiesMdExtension {
 
     public abstract Property<Boolean> getFailIfGeneratedDocsChanged();
 
-    public SpringPropertiesMdExtension() {
+    @Inject
+    public SpringPropertiesMdExtension(ObjectFactory objects) {
+        this.conditions = objects.newInstance(ConditionsExtension.class);
         getTitle().convention("Configuration Properties");
         getOutputStyle().convention("SINGLE_FILE");
         getSensitiveMode().convention("REDACT");
@@ -51,5 +59,60 @@ public abstract class SpringPropertiesMdExtension {
         getFailOnRequiredWithoutExample().convention(true);
         getFailOnDuplicatePropertyNames().convention(true);
         getFailIfGeneratedDocsChanged().convention(false);
+    }
+
+    public ConditionsExtension getConditions() {
+        return conditions;
+    }
+
+    public void conditions(Action<? super ConditionsExtension> action) {
+        action.execute(conditions);
+    }
+
+    public abstract static class ConditionsExtension {
+
+        private final ConditionChecksExtension checks;
+
+        public abstract Property<Boolean> getEnabled();
+
+        public abstract Property<Boolean> getSpringConditionalOnProperty();
+
+        public abstract Property<String> getExternalConditionMode();
+
+        public abstract Property<String> getExternalConditionsOutputFile();
+
+        @Inject
+        public ConditionsExtension(ObjectFactory objects) {
+            this.checks = objects.newInstance(ConditionChecksExtension.class);
+            getEnabled().convention(true);
+            getSpringConditionalOnProperty().convention(true);
+            getExternalConditionMode().convention("WARN");
+        }
+
+        public ConditionChecksExtension getChecks() {
+            return checks;
+        }
+
+        public void checks(Action<? super ConditionChecksExtension> action) {
+            action.execute(checks);
+        }
+    }
+
+    public abstract static class ConditionChecksExtension {
+
+        public abstract Property<Boolean> getFailOnUndocumentedLocalConditionProperty();
+
+        public abstract Property<Boolean> getWarnOnExternalConditionProperty();
+
+        public abstract Property<Boolean> getWarnOnCollectionConditionProperty();
+
+        public abstract Property<Boolean> getWarnOnNonDashedConditionName();
+
+        public ConditionChecksExtension() {
+            getFailOnUndocumentedLocalConditionProperty().convention(true);
+            getWarnOnExternalConditionProperty().convention(true);
+            getWarnOnCollectionConditionProperty().convention(true);
+            getWarnOnNonDashedConditionName().convention(true);
+        }
     }
 }

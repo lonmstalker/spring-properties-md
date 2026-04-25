@@ -3,7 +3,10 @@ package io.github.springpropertiesmd.core.generator;
 import io.github.springpropertiesmd.api.model.DocumentationBundle;
 import io.github.springpropertiesmd.api.model.ExampleValue;
 import io.github.springpropertiesmd.api.model.GroupMetadata;
+import io.github.springpropertiesmd.api.model.ConditionOwnerType;
+import io.github.springpropertiesmd.api.model.PropertyConditionMetadata;
 import io.github.springpropertiesmd.api.model.PropertyMetadata;
+import io.github.springpropertiesmd.core.config.ExternalConditionMode;
 import io.github.springpropertiesmd.core.config.GeneratorConfig;
 import io.github.springpropertiesmd.core.config.OutputStyle;
 import io.github.springpropertiesmd.core.config.SensitiveMode;
@@ -18,16 +21,20 @@ import java.util.Map;
 public final class TableMarkdownGenerator implements MarkdownGenerator {
 
     private final MarkdownFormatter formatter = new MarkdownFormatter();
+    private final ConditionTextFormatter conditionFormatter = new ConditionTextFormatter();
 
     @Override
     public RenderedDocumentation render(DocumentationBundle bundle, GeneratorConfig config) {
-        return switch (config.outputStyle()) {
-            case SINGLE_FILE -> RenderedDocumentation.ordered(Map.of(
-                    config.outputFile(), generateDocument(bundle, config)
-            ));
+        RenderedDocumentation mainDocumentation = switch (config.outputStyle()) {
+            case SINGLE_FILE -> {
+                Map<Path, String> files = new LinkedHashMap<>();
+                files.put(config.outputFile(), generateDocument(bundle, config));
+                yield RenderedDocumentation.ordered(files);
+            }
             case PER_GROUP -> renderPerGroup(bundle, config);
             case PER_CATEGORY -> renderPerCategory(bundle, config);
         };
+        return withExternalConditions(mainDocumentation, bundle, config);
     }
 
     private RenderedDocumentation renderPerGroup(DocumentationBundle bundle, GeneratorConfig config) {
@@ -102,6 +109,10 @@ public final class TableMarkdownGenerator implements MarkdownGenerator {
         }
 
         Map<String, List<PropertyMetadata>> propertiesByGroup = propertiesByGroup(bundle, config);
+        Map<String, List<PropertyConditionMetadata>> groupConditions = conditionsByOwner(
+                bundle, ConditionOwnerType.PROPERTY_GROUP, config);
+        Map<String, List<PropertyConditionMetadata>> propertyConditions = conditionsByOwner(
+                bundle, ConditionOwnerType.PROPERTY, config);
 
         if (config.includeTableOfContents() && !groupMap.isEmpty()) {
             List<MarkdownSection.TableOfContents.TocEntry> tocEntries = new ArrayList<>();
@@ -119,7 +130,8 @@ public final class TableMarkdownGenerator implements MarkdownGenerator {
             sections.add(new MarkdownSection.PropertyTable(
                     bundle.properties(),
                     config.includeValidation(),
-                    config.includeExamples()
+                    config.includeExamples(),
+                    effectiveConditionsByProperty(bundle.properties(), groupConditions, propertyConditions)
             ));
         } else {
             for (GroupMetadata group : sortedGroups) {
@@ -127,10 +139,12 @@ public final class TableMarkdownGenerator implements MarkdownGenerator {
                 if (props.isEmpty()) continue;
 
                 sections.add(new MarkdownSection.GroupHeader(group.displayName(), group.description()));
+                addGroupConditions(sections, groupConditions.getOrDefault(group.name(), List.of()));
                 sections.add(new MarkdownSection.PropertyTable(
                         props,
                         config.includeValidation(),
-                        config.includeExamples()
+                        config.includeExamples(),
+                        effectiveConditionsByProperty(props, groupConditions, propertyConditions)
                 ));
             }
 
@@ -140,7 +154,8 @@ public final class TableMarkdownGenerator implements MarkdownGenerator {
                 sections.add(new MarkdownSection.PropertyTable(
                         ungrouped,
                         config.includeValidation(),
-                        config.includeExamples()
+                        config.includeExamples(),
+                        effectiveConditionsByProperty(ungrouped, groupConditions, propertyConditions)
                 ));
             }
         }
@@ -152,6 +167,70 @@ public final class TableMarkdownGenerator implements MarkdownGenerator {
         }
 
         return sb.toString().stripTrailing() + "\n";
+    }
+
+    private void addGroupConditions(List<MarkdownSection> sections, List<PropertyConditionMetadata> conditions) {
+        if (conditions.isEmpty()) {
+            return;
+        }
+        sections.add(new MarkdownSection.RawText("\nApplies when:\n\n" + conditionFormatter.bulletList(conditions)));
+    }
+
+    private RenderedDocumentation withExternalConditions(RenderedDocumentation documentation, DocumentationBundle bundle,
+                                                         GeneratorConfig config) {
+        if (!config.conditions().enabled()
+                || !config.conditions().springConditionalOnProperty()
+                || config.conditions().externalConditionMode() != ExternalConditionMode.SEPARATE_FILE) {
+            return documentation;
+        }
+        List<PropertyConditionMetadata> externalConditions = bundle.conditions().stream()
+                .filter(condition -> condition.requirements().stream().anyMatch(requirement -> !requirement.local()))
+                .toList();
+        if (externalConditions.isEmpty()) {
+            return documentation;
+        }
+        Map<Path, String> files = new LinkedHashMap<>(documentation.files());
+        files.put(config.conditions().externalConditionsOutputFile(),
+                conditionFormatter.externalDocument(externalConditions));
+        return RenderedDocumentation.ordered(files);
+    }
+
+    private Map<String, List<PropertyConditionMetadata>> conditionsByOwner(
+            DocumentationBundle bundle,
+            ConditionOwnerType ownerType,
+            GeneratorConfig config
+    ) {
+        if (!config.conditions().renderMainConditions()) {
+            return Map.of();
+        }
+        Map<String, List<PropertyConditionMetadata>> result = new LinkedHashMap<>();
+        for (PropertyConditionMetadata condition : bundle.conditions()) {
+            if (condition.ownerType() != ownerType || condition.requirements().isEmpty()) {
+                continue;
+            }
+            if (condition.requirements().stream().anyMatch(requirement -> !requirement.local())) {
+                continue;
+            }
+            result.computeIfAbsent(condition.ownerId(), ignored -> new ArrayList<>()).add(condition);
+        }
+        return result;
+    }
+
+    private Map<String, List<PropertyConditionMetadata>> effectiveConditionsByProperty(
+            List<PropertyMetadata> properties,
+            Map<String, List<PropertyConditionMetadata>> groupConditions,
+            Map<String, List<PropertyConditionMetadata>> propertyConditions
+    ) {
+        Map<String, List<PropertyConditionMetadata>> result = new LinkedHashMap<>();
+        for (PropertyMetadata property : properties) {
+            List<PropertyConditionMetadata> conditions = new ArrayList<>();
+            conditions.addAll(groupConditions.getOrDefault(property.groupName(), List.of()));
+            conditions.addAll(propertyConditions.getOrDefault(property.name(), List.of()));
+            if (!conditions.isEmpty()) {
+                result.put(property.name(), conditions);
+            }
+        }
+        return result;
     }
 
     private Map<String, GroupMetadata> groupsByName(DocumentationBundle bundle) {

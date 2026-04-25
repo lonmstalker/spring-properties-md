@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.springpropertiesmd.api.model.DocumentationBundle;
 import io.github.springpropertiesmd.api.model.GroupMetadata;
+import io.github.springpropertiesmd.api.model.PropertyConditionMetadata;
 import io.github.springpropertiesmd.api.model.PropertyMetadata;
 
 import java.io.IOException;
@@ -43,12 +44,14 @@ public class MetadataReader {
     public DocumentationBundle merge(List<DocumentationBundle> bundles) {
         List<GroupMetadata> allGroups = new ArrayList<>();
         List<PropertyMetadata> allProperties = new ArrayList<>();
+        List<PropertyConditionMetadata> allConditions = new ArrayList<>();
 
         for (DocumentationBundle bundle : bundles) {
             allGroups.addAll(bundle.groups());
             allProperties.addAll(bundle.properties());
+            allConditions.addAll(bundle.conditions());
         }
 
-        return new DocumentationBundle(allGroups, allProperties);
+        return new DocumentationBundle(allGroups, allProperties, allConditions);
     }
 }

@@ -12,13 +12,35 @@ public record GeneratorConfig(
         boolean includeValidation,
         boolean includeExamples,
         SensitiveMode sensitiveMode,
-        boolean includeCustomMetadata
+        boolean includeCustomMetadata,
+        ConditionConfig conditions
 ) {
+    public GeneratorConfig(
+            Path outputFile,
+            Path outputDirectory,
+            String title,
+            OutputStyle outputStyle,
+            boolean includeTableOfContents,
+            boolean includeDeprecated,
+            boolean includeValidation,
+            boolean includeExamples,
+            SensitiveMode sensitiveMode,
+            boolean includeCustomMetadata
+    ) {
+        this(outputFile, outputDirectory, title, outputStyle, includeTableOfContents,
+                includeDeprecated, includeValidation, includeExamples, sensitiveMode,
+                includeCustomMetadata, null);
+    }
+
     public GeneratorConfig {
         outputDirectory = outputDirectory != null ? outputDirectory : defaultOutputDirectory(outputFile);
         title = title != null ? title : "Configuration Properties";
         outputStyle = outputStyle != null ? outputStyle : OutputStyle.SINGLE_FILE;
         sensitiveMode = sensitiveMode != null ? sensitiveMode : SensitiveMode.REDACT;
+        Path defaultExternalConditionsOutputFile = defaultExternalConditionsOutputFile(outputFile);
+        conditions = conditions != null
+                ? conditions.withDefaults(defaultExternalConditionsOutputFile)
+                : ConditionConfig.defaults(defaultExternalConditionsOutputFile);
     }
 
     public static GeneratorConfig defaults(Path outputFile) {
@@ -32,7 +54,8 @@ public record GeneratorConfig(
                 true,
                 true,
                 SensitiveMode.REDACT,
-                false
+                false,
+                null
         );
     }
 
@@ -46,5 +69,13 @@ public record GeneratorConfig(
         String baseName = dot > 0 ? name.substring(0, dot) : name;
         Path parent = outputFile.getParent();
         return parent == null ? Path.of(baseName) : parent.resolve(baseName);
+    }
+
+    public static Path defaultExternalConditionsOutputFile(Path outputFile) {
+        Path fileName = Path.of("external-property-conditions.md");
+        if (outputFile == null || outputFile.getParent() == null) {
+            return fileName;
+        }
+        return outputFile.getParent().resolve(fileName);
     }
 }

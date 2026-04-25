@@ -37,6 +37,7 @@ class MetadataReaderTest {
         assertThat(bundle.groups().getFirst().name()).isEqualTo("app");
         assertThat(bundle.properties()).hasSize(1);
         assertThat(bundle.properties().getFirst().name()).isEqualTo("app.name");
+        assertThat(bundle.conditions()).isEmpty();
     }
 
     @Test

@@ -33,6 +33,7 @@ class IntegrationTest {
         assertThat(bundle.groups()).anyMatch(g -> g.displayName().equals("Database Configuration"));
         assertThat(bundle.groups()).anyMatch(g -> g.displayName().equals("Security Configuration"));
         assertThat(bundle.groups()).anyMatch(g -> g.displayName().equals("Collection Configuration"));
+        assertThat(bundle.groups()).anyMatch(g -> g.displayName().equals("Redis Configuration"));
     }
 
     @Test
@@ -100,10 +101,26 @@ class IntegrationTest {
         assertThat(content).contains("## Security Configuration");
         assertThat(content).contains("## Nested Configuration");
         assertThat(content).contains("## Collection Configuration");
+        assertThat(content).contains("## Redis Configuration");
         assertThat(content).contains("app.server.port");
         assertThat(content).contains("app.database.url");
         assertThat(content).contains("app.security.jwt-secret");
         assertThat(content).contains("app.security.api-key");
+        assertThat(content).contains("app.redis.enabled");
+        assertThat(content).contains("Effective when");
+    }
+
+    @Test
+    void enrichedMetadataContainsPropertyConditions() throws IOException {
+        MetadataReader reader = new MetadataReader();
+        DocumentationBundle bundle = reader.readFromClassesDir(Path.of("target/classes"));
+
+        assertThat(bundle.conditions()).anyMatch(condition ->
+                condition.ownerId().equals("app.redis")
+                        && condition.requirements().stream().anyMatch(requirement ->
+                        requirement.propertyName().equals("app.redis.enabled")
+                                && requirement.local()
+                                && requirement.matchIfMissing()));
     }
 
     @Test

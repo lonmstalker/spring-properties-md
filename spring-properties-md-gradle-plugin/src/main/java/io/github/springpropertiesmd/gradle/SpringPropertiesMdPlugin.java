@@ -25,6 +25,10 @@ public class SpringPropertiesMdPlugin implements Plugin<Project> {
             task.getIncludeValidation().convention(extension.getIncludeValidation());
             task.getIncludeExamples().convention(extension.getIncludeExamples());
             task.getIncludeCustomMetadata().convention(extension.getIncludeCustomMetadata());
+            task.getConditionsEnabled().convention(extension.getConditions().getEnabled());
+            task.getSpringConditionalOnProperty().convention(extension.getConditions().getSpringConditionalOnProperty());
+            task.getExternalConditionMode().convention(extension.getConditions().getExternalConditionMode());
+            task.getExternalConditionsOutputFile().convention(extension.getConditions().getExternalConditionsOutputFile());
 
             project.getPlugins().withType(JavaPlugin.class, javaPlugin -> {
                 task.dependsOn(project.getTasks().named("compileJava"));
@@ -63,12 +67,24 @@ public class SpringPropertiesMdPlugin implements Plugin<Project> {
             task.getIncludeValidation().convention(extension.getIncludeValidation());
             task.getIncludeExamples().convention(extension.getIncludeExamples());
             task.getIncludeCustomMetadata().convention(extension.getIncludeCustomMetadata());
+            task.getConditionsEnabled().convention(extension.getConditions().getEnabled());
+            task.getSpringConditionalOnProperty().convention(extension.getConditions().getSpringConditionalOnProperty());
+            task.getExternalConditionMode().convention(extension.getConditions().getExternalConditionMode());
+            task.getExternalConditionsOutputFile().convention(extension.getConditions().getExternalConditionsOutputFile());
             task.getFailOnMissingDescription().convention(extension.getFailOnMissingDescription());
             task.getFailOnSensitiveDefault().convention(extension.getFailOnSensitiveDefault());
             task.getFailOnDeprecatedWithoutReplacement().convention(extension.getFailOnDeprecatedWithoutReplacement());
             task.getFailOnRequiredWithoutExample().convention(extension.getFailOnRequiredWithoutExample());
             task.getFailOnDuplicatePropertyNames().convention(extension.getFailOnDuplicatePropertyNames());
             task.getFailIfGeneratedDocsChanged().convention(extension.getFailIfGeneratedDocsChanged());
+            task.getFailOnUndocumentedLocalConditionProperty()
+                    .convention(extension.getConditions().getChecks().getFailOnUndocumentedLocalConditionProperty());
+            task.getWarnOnExternalConditionProperty()
+                    .convention(extension.getConditions().getChecks().getWarnOnExternalConditionProperty());
+            task.getWarnOnCollectionConditionProperty()
+                    .convention(extension.getConditions().getChecks().getWarnOnCollectionConditionProperty());
+            task.getWarnOnNonDashedConditionName()
+                    .convention(extension.getConditions().getChecks().getWarnOnNonDashedConditionName());
 
             project.getPlugins().withType(JavaPlugin.class, javaPlugin -> {
                 task.dependsOn(project.getTasks().named("compileJava"));

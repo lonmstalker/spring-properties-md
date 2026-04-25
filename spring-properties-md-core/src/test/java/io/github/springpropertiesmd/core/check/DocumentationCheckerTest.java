@@ -3,7 +3,11 @@ package io.github.springpropertiesmd.core.check;
 import io.github.springpropertiesmd.api.model.DeprecationInfo;
 import io.github.springpropertiesmd.api.model.DocumentationBundle;
 import io.github.springpropertiesmd.api.model.ExampleValue;
+import io.github.springpropertiesmd.api.model.ConditionOwnerType;
+import io.github.springpropertiesmd.api.model.PropertyConditionMatchMode;
+import io.github.springpropertiesmd.api.model.PropertyConditionMetadata;
 import io.github.springpropertiesmd.api.model.PropertyMetadata;
+import io.github.springpropertiesmd.api.model.PropertyRequirement;
 import io.github.springpropertiesmd.core.config.GeneratorConfig;
 import io.github.springpropertiesmd.core.generator.TableMarkdownGenerator;
 import org.junit.jupiter.api.Test;
@@ -72,6 +76,52 @@ class DocumentationCheckerTest {
         assertThat(result.issues()).extracting(DocumentationIssue::rule).contains("generated-docs-changed");
     }
 
+    @Test
+    void reportsUndocumentedLocalConditionPropertyAsError() {
+        var property = new PropertyMetadata("app.redis.host", "java.lang.String", null, "Host", null,
+                false, false, null, null, null, null, null, null, null, null, null, null, "app.redis");
+        var condition = condition(requirement("app.redis.enabled", true));
+
+        DocumentationCheckResult result = checker.check(new DocumentationBundle(List.of(), List.of(property),
+                        List.of(condition)),
+                GeneratorConfig.defaults(Path.of("docs.md")), CheckConfig.defaults());
+
+        assertThat(result.passed()).isFalse();
+        assertThat(result.issues()).extracting(DocumentationIssue::rule)
+                .contains("undocumented-local-condition-property");
+    }
+
+    @Test
+    void reportsExternalConditionPropertyAsWarning() {
+        var property = new PropertyMetadata("app.redis.host", "java.lang.String", null, "Host", null,
+                false, false, null, null, null, null, null, null, null, null, null, null, "app.redis");
+        var condition = condition(requirement("spring.datasource.url", false));
+
+        DocumentationCheckResult result = checker.check(new DocumentationBundle(List.of(), List.of(property),
+                        List.of(condition)),
+                GeneratorConfig.defaults(Path.of("docs.md")), CheckConfig.defaults());
+
+        assertThat(result.passed()).isTrue();
+        assertThat(result.issues()).extracting(DocumentationIssue::rule)
+                .contains("external-condition-property");
+        assertThat(result.issues().getFirst().severity()).isEqualTo(DocumentationIssueSeverity.WARNING);
+    }
+
+    @Test
+    void reportsCollectionAndNonDashedConditionWarnings() {
+        var property = new PropertyMetadata("app.values[].name", "java.lang.String", null, "Name", null,
+                false, false, null, null, null, null, null, null, null, null, null, null, "app");
+        var collectionCondition = condition(requirement("app.values", true));
+        var nonDashedCondition = condition(requirement("app.cacheEnabled", true));
+
+        DocumentationCheckResult result = checker.check(new DocumentationBundle(List.of(), List.of(property),
+                        List.of(collectionCondition, nonDashedCondition)),
+                GeneratorConfig.defaults(Path.of("docs.md")), CheckConfig.defaults());
+
+        assertThat(result.issues()).extracting(DocumentationIssue::rule)
+                .contains("collection-condition-property", "non-dashed-condition-property");
+    }
+
     private DocumentationBundle validBundle() {
         var property = new PropertyMetadata("app.name", "java.lang.String", null, "Name", null,
                 false, false, null, null, null, null, null, null, null, null, null, null, "app");
@@ -95,5 +145,15 @@ class DocumentationCheckerTest {
                 false, false, null, null, null, null, null, null, null, null, null, null, "app");
         return new DocumentationBundle(List.of(), List.of(missingDescription, sensitive, deprecated,
                 required, duplicateA, duplicateB));
+    }
+
+    private PropertyConditionMetadata condition(PropertyRequirement requirement) {
+        return new PropertyConditionMetadata("com.example.RedisConfiguration", "app.redis",
+                ConditionOwnerType.PROPERTY_GROUP, List.of(requirement));
+    }
+
+    private PropertyRequirement requirement(String propertyName, boolean local) {
+        return new PropertyRequirement(propertyName, "", false,
+                PropertyConditionMatchMode.PRESENT_AND_NOT_FALSE, local);
     }
 }

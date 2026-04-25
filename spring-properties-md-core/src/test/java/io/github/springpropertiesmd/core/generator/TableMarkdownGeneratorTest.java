@@ -1,6 +1,8 @@
 package io.github.springpropertiesmd.core.generator;
 
 import io.github.springpropertiesmd.api.model.*;
+import io.github.springpropertiesmd.core.config.ConditionConfig;
+import io.github.springpropertiesmd.core.config.ExternalConditionMode;
 import io.github.springpropertiesmd.core.config.GeneratorConfig;
 import io.github.springpropertiesmd.core.config.OutputStyle;
 import io.github.springpropertiesmd.core.config.SensitiveMode;
@@ -140,8 +142,74 @@ class TableMarkdownGeneratorTest {
         assertThat(result).contains("# My Custom Title");
     }
 
+    @Test
+    void rendersLocalGroupConditionsInMainDocs() {
+        var group = new GroupMetadata("app.redis", "Redis", "", "com.Redis", "", 0);
+        var enabled = simpleProperty("app.redis.enabled", "Enabled", "app.redis");
+        var host = simpleProperty("app.redis.host", "Host", "app.redis");
+        var condition = condition("com.RedisConfiguration", "app.redis",
+                requirement("app.redis.enabled", "true", true, true));
+        var bundle = new DocumentationBundle(List.of(group), List.of(enabled, host), List.of(condition));
+
+        String result = generator.generate(bundle, defaultConfig());
+
+        assertThat(result).contains("Applies when:");
+        assertThat(result).contains("- `app.redis.enabled=true`, or the property is missing");
+        assertThat(result).contains("Effective when");
+        assertThat(result).contains("| `app.redis.host` | `String` | Host |  | No |  |  | `app.redis.enabled=true`, or the property is missing |");
+    }
+
+    @Test
+    void externalConditionsAreNotRenderedInMainDocs() {
+        var group = new GroupMetadata("app.redis", "Redis", "", "com.Redis", "", 0);
+        var host = simpleProperty("app.redis.host", "Host", "app.redis");
+        var condition = condition("com.RedisConfiguration", "app.redis",
+                requirement("spring.datasource.url", "", false, false));
+        var bundle = new DocumentationBundle(List.of(group), List.of(host), List.of(condition));
+
+        String result = generator.generate(bundle, defaultConfig());
+
+        assertThat(result).doesNotContain("Effective when");
+        assertThat(result).doesNotContain("spring.datasource.url");
+    }
+
+    @Test
+    void rendersSeparateExternalConditionsFile() {
+        var group = new GroupMetadata("app.redis", "Redis", "", "com.Redis", "", 0);
+        var host = simpleProperty("app.redis.host", "Host", "app.redis");
+        var condition = condition("com.RedisConfiguration", "app.redis",
+                requirement("spring.datasource.url", "", false, false));
+        var bundle = new DocumentationBundle(List.of(group), List.of(host), List.of(condition));
+        var config = new GeneratorConfig(
+                Path.of("output.md"), Path.of("output"), "Config", OutputStyle.SINGLE_FILE,
+                false, true, true, true, SensitiveMode.REDACT, false,
+                new ConditionConfig(true, true, ExternalConditionMode.SEPARATE_FILE, Path.of("external.md"))
+        );
+
+        RenderedDocumentation rendered = generator.render(bundle, config);
+
+        assertThat(rendered.files()).containsKey(Path.of("output.md"));
+        assertThat(rendered.files()).containsKey(Path.of("external.md"));
+        assertThat(rendered.files().get(Path.of("external.md")))
+                .contains("# External Property Conditions")
+                .contains("## `spring.datasource.url`")
+                .contains("`spring.datasource.url` must be present and not equal to `false`");
+    }
+
     private PropertyMetadata simpleProperty(String name, String description, String groupName) {
         return new PropertyMetadata(name, "java.lang.String", null, description, null,
                 false, false, null, null, null, null, null, null, null, null, null, null, groupName);
+    }
+
+    private PropertyConditionMetadata condition(String sourceElement, String ownerId, PropertyRequirement... requirements) {
+        return new PropertyConditionMetadata(sourceElement, ownerId, ConditionOwnerType.PROPERTY_GROUP, List.of(requirements));
+    }
+
+    private PropertyRequirement requirement(String propertyName, String havingValue, boolean matchIfMissing,
+                                            boolean local) {
+        PropertyConditionMatchMode mode = havingValue == null || havingValue.isBlank()
+                ? PropertyConditionMatchMode.PRESENT_AND_NOT_FALSE
+                : PropertyConditionMatchMode.EQUALS_VALUE;
+        return new PropertyRequirement(propertyName, havingValue, matchIfMissing, mode, local);
     }
 }
