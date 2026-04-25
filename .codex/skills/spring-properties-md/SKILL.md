@@ -21,7 +21,12 @@ Details: `references/01_versioning_jitpack.md`
 
 3) Generate docs and verify outputs
 - Maven default output: `target/configuration-properties.md`
+- Maven multi-file output directory: `target/configuration-properties`
 - Gradle default output: `build/configuration-properties.md`
+- Gradle multi-file output directory: `build/configuration-properties`
+- Quality gates are explicit:
+  - Maven: `mvn spring-properties-md:check-docs`
+  - Gradle: `./gradlew checkPropertyDocs`
 - The generators will **skip** if metadata is missing:
   - Maven: `target/classes/META-INF/spring-properties-md/enriched-metadata.json`
   - Gradle (Java): `build/classes/java/main/META-INF/spring-properties-md/enriched-metadata.json`
@@ -31,7 +36,7 @@ Details: `references/01_versioning_jitpack.md`
 
 ## High-signal notes (current behavior)
 
-- The annotation processor runs for types annotated with `@ConfigurationProperties` and extracts **fields only** (FIELD).
+- The annotation processor runs for types annotated with `@ConfigurationProperties` and extracts property metadata from fields, record components, JavaBean getters, and constructor parameters.
 - Property names are computed as: `prefix + "." + kebab-case(fieldName)` (example: `maxRetries` -> `max-retries`).
 - For the full annotation reference and best practices, read:
   - `../spring-properties-md-annotations/SKILL.md`

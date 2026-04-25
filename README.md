@@ -143,28 +143,41 @@ HTTP server settings
 
 | Annotation | Target | Purpose |
 |---|---|---|
-| `@PropertyDoc` | FIELD, METHOD, PARAMETER | Main: description, required, profiles, sensitive, typeDisplay |
+| `@PropertyDoc` | FIELD, METHOD, PARAMETER, RECORD_COMPONENT | Main: description, required, profiles, sensitive, typeDisplay |
 | `@PropertyGroupDoc` | TYPE | Class-level: displayName, description, category, order |
-| `@PropertyExample` | FIELD, METHOD, PARAMETER | Repeatable: value + description |
-| `@PropertyDeprecation` | FIELD, METHOD, TYPE | reason, replacedBy, since, removalVersion |
-| `@PropertyCategory` | FIELD, METHOD, TYPE | category + subcategory |
-| `@PropertySince` | FIELD, METHOD, TYPE | version |
-| `@PropertySee` | FIELD, METHOD, TYPE | Repeatable: cross-reference |
-| `@PropertyCustomMetadata` | FIELD, METHOD, TYPE | Repeatable: key-value pairs |
+| `@PropertyExample` | FIELD, METHOD, PARAMETER, RECORD_COMPONENT | Repeatable: value + description |
+| `@PropertyDeprecation` | FIELD, METHOD, TYPE, RECORD_COMPONENT | reason, replacedBy, since, removalVersion |
+| `@PropertyCategory` | FIELD, METHOD, TYPE, RECORD_COMPONENT | category + subcategory |
+| `@PropertySince` | FIELD, METHOD, TYPE, RECORD_COMPONENT | version |
+| `@PropertySee` | FIELD, METHOD, TYPE, RECORD_COMPONENT | Repeatable: cross-reference |
+| `@PropertyCustomMetadata` | FIELD, METHOD, TYPE, RECORD_COMPONENT | Repeatable: key-value pairs |
+
+Property-level annotations are read from fields, record components, JavaBean getters, and constructor parameters.
 
 ## Maven Plugin Configuration
 
 | Parameter | Default | Description |
 |---|---|---|
 | `outputFile` | `${project.build.directory}/configuration-properties.md` | Output file path |
+| `outputDirectory` | `${project.build.directory}/configuration-properties` | Output directory for `PER_GROUP` and `PER_CATEGORY` |
 | `title` | `Configuration Properties` | Document title |
 | `outputStyle` | `SINGLE_FILE` | `SINGLE_FILE`, `PER_GROUP`, `PER_CATEGORY` |
+| `sensitiveMode` | `REDACT` | `SHOW`, `REDACT`, `OMIT` |
 | `includeTableOfContents` | `true` | Include TOC |
 | `includeDeprecated` | `true` | Include deprecated properties |
 | `includeValidation` | `true` | Show validation constraints |
 | `includeExamples` | `true` | Show examples |
-| `includeSensitive` | `true` | Show sensitive properties |
 | `includeCustomMetadata` | `false` | Show custom metadata |
+
+### Documentation Checks
+
+The Maven plugin also provides an explicit quality gate goal:
+
+```bash
+mvn spring-properties-md:check-docs
+```
+
+By default it fails on missing descriptions, sensitive defaults/examples, deprecated properties without replacements, required properties without examples, and duplicate property names. To also verify committed documentation is current, enable `failIfGeneratedDocsChanged`.
 
 ## Quick Start (Gradle)
 
@@ -176,11 +189,14 @@ plugins {
 springPropertiesMd {
     title = 'My App Configuration'
     outputFile = 'docs/configuration.md'
+    outputDirectory = 'docs/configuration'
+    sensitiveMode = 'REDACT'
 }
 ```
 
 ```bash
 ./gradlew generatePropertyDocs
+./gradlew checkPropertyDocs
 ```
 
 ## Requirements

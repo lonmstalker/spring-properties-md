@@ -15,6 +15,7 @@ class SpringPropertiesMdPluginTest {
         project.getPlugins().apply(SpringPropertiesMdPlugin.class);
 
         assertThat(project.getTasks().findByName("generatePropertyDocs")).isNotNull();
+        assertThat(project.getTasks().findByName("checkPropertyDocs")).isNotNull();
     }
 
     @Test
@@ -47,6 +48,7 @@ class SpringPropertiesMdPluginTest {
 
         assertThat(extension.getTitle().get()).isEqualTo("Configuration Properties");
         assertThat(extension.getOutputStyle().get()).isEqualTo("SINGLE_FILE");
+        assertThat(extension.getSensitiveMode().get()).isEqualTo("REDACT");
         assertThat(extension.getIncludeTableOfContents().get()).isTrue();
         assertThat(extension.getIncludeDeprecated().get()).isTrue();
     }

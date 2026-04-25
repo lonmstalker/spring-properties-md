@@ -30,7 +30,7 @@ Database connection settings
 | Property | Type | Description | Default | Required | Constraints | Examples |
 |----------|------|-------------|---------|----------|-------------|----------|
 | `app.database.url` | `String` | JDBC connection URL |  | Yes |  | `jdbc:postgresql://localhost:5432/mydb` (PostgreSQL) |
-| `app.database.username` | `String` | Database username |  | Yes |  |  |
+| `app.database.username` | `String` | Database username |  | Yes |  | `app_user` (application user) |
 | `app.database.password` | `String` | Database password |  | Yes |  |  |
 | `app.database.max-pool-size` | `int` | Maximum connection pool size |  | No |  |  |
 
@@ -54,7 +54,7 @@ Nested property expansion test
 | Property | Type | Description | Default | Required | Constraints | Examples |
 |----------|------|-------------|---------|----------|-------------|----------|
 | `app.nested.name` | `String` | Simple name |  | No |  |  |
-| `app.nested.database.host` | `String` | DB host |  | Yes |  |  |
+| `app.nested.database.host` | `String` | DB host |  | Yes |  | `localhost` (local development) |
 | `app.nested.database.port` | `int` | DB port |  | No |  |  |
 | `app.nested.database.pool.size` | `int` | Pool size |  | No |  |  |
 | `app.nested.database.pool.timeout` | `long` | Pool timeout |  | No |  |  |

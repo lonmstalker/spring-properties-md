@@ -8,9 +8,9 @@ description: "Reference and usage patterns for spring-properties-md annotations 
 ## Effective targets (current processor behavior)
 
 - TYPE (class): `@PropertyGroupDoc`, `@PropertyCategory`
-- FIELD (property): `@PropertyDoc`, `@PropertyExample`, `@PropertyDeprecation`, `@PropertyCategory`, `@PropertySince`, `@PropertySee`, `@PropertyCustomMetadata`
+- Property metadata: `@PropertyDoc`, `@PropertyExample`, `@PropertyDeprecation`, `@PropertyCategory`, `@PropertySince`, `@PropertySee`, `@PropertyCustomMetadata` on fields, record components, JavaBean getters, and constructor parameters where the annotation target allows it.
 
-Note: although some annotations declare METHOD/PARAMETER/TYPE targets, the current processor extracts **property-level** metadata from fields only.
+Note: when multiple elements describe the same logical property, field/record metadata has priority over getter metadata, which has priority over constructor parameter metadata.
 
 ## Annotations
 
@@ -21,7 +21,7 @@ Use on a `@ConfigurationProperties` class to document the group:
 - `category`: категория группы (может быть переопределена через `@PropertyCategory` на TYPE)
 - `order`: сортировка групп (меньше = раньше)
 
-### `@PropertyDoc` (FIELD)
+### `@PropertyDoc` (FIELD, METHOD, PARAMETER, RECORD_COMPONENT)
 Use on a property field to describe it:
 - `description`: человекочитаемое описание
 - `required`: `Requirement.AUTO | Requirement.REQUIRED | Requirement.OPTIONAL`
@@ -35,21 +35,21 @@ Use on a property field to describe it:
 - `REQUIRED`
 - `OPTIONAL`
 
-### `@PropertyExample` (FIELD, repeatable)
+### `@PropertyExample` (FIELD, METHOD, PARAMETER, RECORD_COMPONENT, repeatable)
 Use to provide example values:
 - `value`: пример значения (обязателен)
 - `description`: подпись к примеру (опционально)
 
 Container (служебное): `@PropertyExamples` (его обычно не пишут руками).
 
-### `@PropertyDeprecation` (FIELD)
+### `@PropertyDeprecation` (FIELD, METHOD, RECORD_COMPONENT)
 Use to mark a property as deprecated:
 - `reason`
 - `replacedBy`
 - `since`
 - `removalVersion`
 
-### `@PropertyCategory` (TYPE or FIELD)
+### `@PropertyCategory` (TYPE, FIELD, METHOD, RECORD_COMPONENT)
 Use to categorize:
 - `value`: category
 - `subcategory`: subcategory (в основном полезно для properties)
@@ -58,17 +58,17 @@ Use to categorize:
 - для группы: TYPE-level `@PropertyCategory` имеет приоритет над `@PropertyGroupDoc.category`
 - для property: FIELD-level `@PropertyCategory` задает `category/subcategory` у property
 
-### `@PropertySince` (FIELD)
+### `@PropertySince` (FIELD, METHOD, RECORD_COMPONENT)
 Use to indicate since-version for a property:
 - `value`: версия (строка)
 
-### `@PropertySee` (FIELD, repeatable)
+### `@PropertySee` (FIELD, METHOD, RECORD_COMPONENT, repeatable)
 Use for “see also” references:
 - `value`: строка-ссылка (например ключ/URL/имя свойства)
 
 Container (служебное): `@PropertySeeReferences`.
 
-### `@PropertyCustomMetadata` (FIELD, repeatable)
+### `@PropertyCustomMetadata` (FIELD, METHOD, RECORD_COMPONENT, repeatable)
 Use for arbitrary key/value metadata:
 - `key`
 - `value`

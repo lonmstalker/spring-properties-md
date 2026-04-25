@@ -3,6 +3,7 @@ package io.github.springpropertiesmd.core.generator;
 import io.github.springpropertiesmd.api.model.*;
 import io.github.springpropertiesmd.core.config.GeneratorConfig;
 import io.github.springpropertiesmd.core.config.OutputStyle;
+import io.github.springpropertiesmd.core.config.SensitiveMode;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
@@ -77,8 +78,8 @@ class TableMarkdownGeneratorTest {
         var bundle = new DocumentationBundle(List.of(group), List.of(deprecated));
 
         var config = new GeneratorConfig(
-                Path.of("output.md"), "Config", OutputStyle.SINGLE_FILE,
-                false, false, true, true, true, false
+                Path.of("output.md"), Path.of("output"), "Config", OutputStyle.SINGLE_FILE,
+                false, false, true, true, SensitiveMode.REDACT, false
         );
 
         String result = generator.generate(bundle, config);
@@ -121,8 +122,8 @@ class TableMarkdownGeneratorTest {
         var bundle = new DocumentationBundle(List.of(group), List.of(prop));
 
         var config = new GeneratorConfig(
-                Path.of("output.md"), "Config", OutputStyle.SINGLE_FILE,
-                false, true, true, true, true, false
+                Path.of("output.md"), Path.of("output"), "Config", OutputStyle.SINGLE_FILE,
+                false, true, true, true, SensitiveMode.REDACT, false
         );
 
         String result = generator.generate(bundle, config);
@@ -132,8 +133,8 @@ class TableMarkdownGeneratorTest {
     @Test
     void customTitle() {
         var config = new GeneratorConfig(
-                Path.of("output.md"), "My Custom Title", OutputStyle.SINGLE_FILE,
-                false, true, true, true, true, false
+                Path.of("output.md"), Path.of("output"), "My Custom Title", OutputStyle.SINGLE_FILE,
+                false, true, true, true, SensitiveMode.REDACT, false
         );
         String result = generator.generate(DocumentationBundle.empty(), config);
         assertThat(result).contains("# My Custom Title");

@@ -22,6 +22,9 @@ public class SpringPropertiesMdProcessor extends AbstractProcessor {
 
     private PropertyExtractor extractor;
     private MetadataJsonWriter jsonWriter;
+    private final List<GroupMetadata> groups = new ArrayList<>();
+    private final List<PropertyMetadata> properties = new ArrayList<>();
+    private boolean written;
 
     @Override
     public SourceVersion getSupportedSourceVersion() {
@@ -38,11 +41,9 @@ public class SpringPropertiesMdProcessor extends AbstractProcessor {
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         if (roundEnv.processingOver()) {
+            writeMetadata();
             return false;
         }
-
-        List<GroupMetadata> groups = new ArrayList<>();
-        List<PropertyMetadata> properties = new ArrayList<>();
 
         for (TypeElement annotation : annotations) {
             for (Element element : roundEnv.getElementsAnnotatedWith(annotation)) {
@@ -54,6 +55,14 @@ public class SpringPropertiesMdProcessor extends AbstractProcessor {
             }
         }
 
+        return false;
+    }
+
+    private void writeMetadata() {
+        if (written || (groups.isEmpty() && properties.isEmpty())) {
+            return;
+        }
+        written = true;
         if (!groups.isEmpty() || !properties.isEmpty()) {
             DocumentationBundle bundle = new DocumentationBundle(groups, properties);
             try {
@@ -63,8 +72,6 @@ public class SpringPropertiesMdProcessor extends AbstractProcessor {
                         "Failed to write enriched metadata: " + e.getMessage());
             }
         }
-
-        return false;
     }
 
     private String extractPrefix(TypeElement typeElement) {

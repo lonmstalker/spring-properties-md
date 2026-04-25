@@ -7,7 +7,7 @@
     <parent>
         <groupId>io.github.springpropertiesmd</groupId>
         <artifactId>spring-properties-md</artifactId>
-        <version>0.1.0-SNAPSHOT</version>
+        <version>0.2.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>spring-properties-md-api</artifactId>
@@ -15,11 +15,6 @@
     <description>Annotations and model records for Spring Properties MD</description>
 
     <dependencies>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-        </dependency>
-
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>

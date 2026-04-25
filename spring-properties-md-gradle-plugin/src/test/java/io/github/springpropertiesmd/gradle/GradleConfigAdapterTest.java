@@ -2,6 +2,7 @@ package io.github.springpropertiesmd.gradle;
 
 import io.github.springpropertiesmd.core.config.GeneratorConfig;
 import io.github.springpropertiesmd.core.config.OutputStyle;
+import io.github.springpropertiesmd.core.config.SensitiveMode;
 import org.gradle.api.Project;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.jupiter.api.Test;
@@ -22,12 +23,15 @@ class GradleConfigAdapterTest {
 
         var extension = project.getExtensions().getByType(SpringPropertiesMdExtension.class);
         Path defaultOutput = Path.of("build/docs.md");
+        Path defaultOutputDirectory = Path.of("build/docs");
 
-        GeneratorConfig config = adapter.adapt(extension, defaultOutput);
+        GeneratorConfig config = adapter.adapt(extension, defaultOutput, defaultOutputDirectory);
 
         assertThat(config.outputFile()).isEqualTo(defaultOutput);
+        assertThat(config.outputDirectory()).isEqualTo(defaultOutputDirectory);
         assertThat(config.title()).isEqualTo("Configuration Properties");
         assertThat(config.outputStyle()).isEqualTo(OutputStyle.SINGLE_FILE);
+        assertThat(config.sensitiveMode()).isEqualTo(SensitiveMode.REDACT);
         assertThat(config.includeTableOfContents()).isTrue();
     }
 
@@ -41,13 +45,17 @@ class GradleConfigAdapterTest {
         extension.getTitle().set("My Docs");
         extension.getOutputStyle().set("PER_GROUP");
         extension.getOutputFile().set("/custom/path.md");
+        extension.getOutputDirectory().set("/custom/path");
+        extension.getSensitiveMode().set("OMIT");
         extension.getIncludeTableOfContents().set(false);
 
-        GeneratorConfig config = adapter.adapt(extension, Path.of("default.md"));
+        GeneratorConfig config = adapter.adapt(extension, Path.of("default.md"), Path.of("default"));
 
         assertThat(config.outputFile()).isEqualTo(Path.of("/custom/path.md"));
+        assertThat(config.outputDirectory()).isEqualTo(Path.of("/custom/path"));
         assertThat(config.title()).isEqualTo("My Docs");
         assertThat(config.outputStyle()).isEqualTo(OutputStyle.PER_GROUP);
+        assertThat(config.sensitiveMode()).isEqualTo(SensitiveMode.OMIT);
         assertThat(config.includeTableOfContents()).isFalse();
     }
 }

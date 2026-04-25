@@ -18,6 +18,7 @@ public class DatabaseProperties {
     private String url;
 
     @PropertyDoc(description = "Database username", required = Requirement.REQUIRED)
+    @PropertyExample(value = "app_user", description = "application user")
     private String username;
 
     @PropertyDoc(description = "Database password", required = Requirement.REQUIRED, sensitive = true)

@@ -1,6 +1,7 @@
 package io.github.springpropertiesmd.integration;
 
 import io.github.springpropertiesmd.api.annotation.PropertyDoc;
+import io.github.springpropertiesmd.api.annotation.PropertyExample;
 import io.github.springpropertiesmd.api.annotation.PropertyGroupDoc;
 import io.github.springpropertiesmd.api.annotation.Requirement;
 import jakarta.validation.Valid;
@@ -17,6 +18,7 @@ public record NestedProperties(
         @PropertyDoc(description = "Database settings") @Valid Database database
 ) {
     public record Database(
+            @PropertyExample(value = "localhost", description = "local development")
             @PropertyDoc(description = "DB host", required = Requirement.REQUIRED) String host,
             @PropertyDoc(description = "DB port") int port,
             @PropertyDoc(description = "Connection pool") @Valid Pool pool
