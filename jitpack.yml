@@ -1,5 +1,11 @@
 jdk:
   - openjdk21
 
+before_install:
+  # Maven embeds the reactor coordinates in META-INF/maven/plugin.xml before JitPack publishes the JAR.
+  - perl -pi -e 's{<groupId>io\.github\.springpropertiesmd</groupId>}{<groupId>$ENV{GROUP}.$ENV{ARTIFACT}</groupId>}g' pom.xml */pom.xml
+  - ./mvnw -B org.codehaus.mojo:versions-maven-plugin:2.18.0:set -DnewVersion="$VERSION" -DgenerateBackupPoms=false
+
 install:
   - ./mvnw clean install -DskipTests
+  - ./mvnw -B -N "$GROUP.$ARTIFACT:spring-properties-md-maven-plugin:$VERSION:generate-docs"

@@ -26,7 +26,7 @@ If artifacts do not resolve, first verify coordinates and version against the re
 <dependency>
     <groupId>com.github.lonmstalker.spring-properties-md</groupId>
     <artifactId>spring-properties-md-api</artifactId>
-    <version>v0.1.0</version>
+    <version>v0.6.1</version>
 </dependency>
 ```
 
@@ -41,7 +41,7 @@ If artifacts do not resolve, first verify coordinates and version against the re
             <path>
                 <groupId>com.github.lonmstalker.spring-properties-md</groupId>
                 <artifactId>spring-properties-md-processor</artifactId>
-                <version>v0.1.0</version>
+                <version>v0.6.1</version>
             </path>
         </annotationProcessorPaths>
     </configuration>
@@ -57,7 +57,7 @@ If artifacts do not resolve, first verify coordinates and version against the re
 <plugin>
     <groupId>com.github.lonmstalker.spring-properties-md</groupId>
     <artifactId>spring-properties-md-maven-plugin</artifactId>
-    <version>v0.1.0</version>
+    <version>v0.6.1</version>
     <executions>
         <execution>
             <goals>

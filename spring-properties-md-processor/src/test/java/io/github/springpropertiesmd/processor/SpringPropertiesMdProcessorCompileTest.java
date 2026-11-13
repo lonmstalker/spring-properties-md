@@ -184,6 +184,33 @@ class SpringPropertiesMdProcessorCompileTest {
     }
 
     @Test
+    void computedRecordGetterIsNotAConfigurationProperty() throws IOException {
+        Compilation compilation = compile("""
+                package com.example;
+
+                import io.github.springpropertiesmd.api.annotation.PropertyDoc;
+                import jakarta.validation.constraints.AssertTrue;
+                import org.springframework.boot.context.properties.ConfigurationProperties;
+
+                @ConfigurationProperties("receipts")
+                record ReceiptProperties(boolean enabled, Integer vatCode) {
+                    @PropertyDoc(description = "VAT code")
+                    public Integer getVatCode() { return vatCode; }
+
+                    @AssertTrue
+                    public boolean isVatCodeSetWhenEnabled() { return !enabled || vatCode != null; }
+                }
+                """);
+
+        assertThat(compilation).succeeded();
+        var properties = generatedBundle(compilation).properties();
+        assertThat(properties).extracting(property -> property.name())
+                .containsExactlyInAnyOrder("receipts.enabled", "receipts.vat-code");
+        assertThat(properties).anyMatch(property -> property.name().equals("receipts.vat-code")
+                && property.description().equals("VAT code"));
+    }
+
+    @Test
     void accumulatesMetadataAcrossProcessingRounds() throws IOException {
         Compilation compilation = Compiler.javac()
                 .withProcessors(new GeneratedPropertiesProcessor(), new SpringPropertiesMdProcessor())

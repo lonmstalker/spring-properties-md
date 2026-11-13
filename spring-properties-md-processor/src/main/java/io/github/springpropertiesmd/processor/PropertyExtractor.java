@@ -154,6 +154,11 @@ public class PropertyExtractor {
             }
             return;
         }
+        // Records bind constructor components. A computed JavaBean getter can be a validation method.
+        if (typeElement.getKind() == ElementKind.RECORD && typeElement.getRecordComponents().stream()
+                .noneMatch(component -> component.getSimpleName().contentEquals(propertyName))) {
+            return;
+        }
         candidates.computeIfAbsent(propertyName, ignored -> new ArrayList<>())
                 .add(new PropertyCandidate(propertyName, method.getReturnType(), method, typeElement, 2));
     }
