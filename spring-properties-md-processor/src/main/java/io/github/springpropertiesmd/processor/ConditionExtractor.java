@@ -76,13 +76,7 @@ final class ConditionExtractor {
                     enabledTypes,
                     requirements
             ));
-            return;
         }
-
-        processingEnv.getMessager().printMessage(Diagnostic.Kind.WARNING,
-                "@ConditionalOnProperty is ignored because spring-properties-md cannot map `"
-                        + sourceElement + "` to a local @ConfigurationProperties group.",
-                element);
     }
 
     List<PropertyConditionMetadata> classifiedConditions(List<GroupMetadata> groups,

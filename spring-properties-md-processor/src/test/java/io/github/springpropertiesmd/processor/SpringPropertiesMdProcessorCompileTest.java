@@ -211,6 +211,30 @@ class SpringPropertiesMdProcessorCompileTest {
     }
 
     @Test
+    void conditionOnAnUnrelatedConfigurationDoesNotWarnOrGatePropertyGroups() throws IOException {
+        Compilation compilation = compile("""
+                package com.example;
+
+                import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+                import org.springframework.boot.context.properties.ConfigurationProperties;
+                import org.springframework.context.annotation.Configuration;
+
+                @ConfigurationProperties("app")
+                record AppProperties(String address) {}
+
+                @Configuration
+                @ConditionalOnProperty(name = "app.scheduling.enabled", matchIfMissing = true)
+                class SchedulingConfiguration {}
+                """);
+
+        assertThat(compilation).succeeded();
+        assertThat(compilation).hadWarningCount(0);
+        var bundle = generatedBundle(compilation);
+        assertThat(bundle.properties()).extracting(property -> property.name()).containsExactly("app.address");
+        assertThat(bundle.conditions()).isEmpty();
+    }
+
+    @Test
     void accumulatesMetadataAcrossProcessingRounds() throws IOException {
         Compilation compilation = Compiler.javac()
                 .withProcessors(new GeneratedPropertiesProcessor(), new SpringPropertiesMdProcessor())

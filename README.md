@@ -46,7 +46,7 @@ spring-properties-md (root)
 <dependency>
     <groupId>com.github.lonmstalker.spring-properties-md</groupId>
     <artifactId>spring-properties-md-api</artifactId>
-    <version>v0.6.1</version>
+    <version>v0.6.2</version>
 </dependency>
 ```
 
@@ -61,7 +61,7 @@ spring-properties-md (root)
             <path>
                 <groupId>com.github.lonmstalker.spring-properties-md</groupId>
                 <artifactId>spring-properties-md-processor</artifactId>
-                <version>v0.6.1</version>
+                <version>v0.6.2</version>
             </path>
         </annotationProcessorPaths>
     </configuration>
@@ -74,7 +74,7 @@ spring-properties-md (root)
 <plugin>
     <groupId>com.github.lonmstalker.spring-properties-md</groupId>
     <artifactId>spring-properties-md-maven-plugin</artifactId>
-    <version>v0.6.1</version>
+    <version>v0.6.2</version>
     <executions>
         <execution>
             <goals>
